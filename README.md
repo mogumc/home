@@ -1,2 +1,39 @@
 # home
 纯html实现的Vue + Element-plus个人主页
+
+# 页面
+<img width="1306" height="795" alt="cut" src="https://github.com/user-attachments/assets/1b058557-1b67-4f88-a0c7-374471848666" />
+
+## 功能
+
+- [x] 载入动画
+- [x] 站点简介
+- [x] Hitokoto 一言
+- [x] 日期及时间
+- [x] 响应式界面
+
+## Demo
+
+> 由于 CDN 缓存原因，查看最新效果可能需要 `Ctrl` + `F5` 强制刷新浏览器缓存
+
+- [蘑菇の主页 - EO](https://www.mogug.top)
+- [無名の主页 - CF](https://mogug.top)
+
+# 修改
+找到以下页面  
+<img width="622" height="161" alt="image" src="https://github.com/user-attachments/assets/11c6f2da-1a6d-48ec-a4ba-426f4d54d111" />
+
+在``sites``字段与``socials``中按格式添加  
+name： 显示的文字 icon: 使用bootstrap-icons库,默认版本为1.8(如需使用新版本图标请修改cdn地址) url: 点击跳转的地址  
+```
+{ name: "博客", icon: 'bootstrap-fill', url: 'https://blog.moguq.top' },
+```
+
+# 灵感来源
+[imsyy - home](https://github.com/imsyy/home)  
+由字节跳动提供js与css CDN
+由次元API提供背景
+由Hitokoto提供一言
+
+# License
+MIT License
