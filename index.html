@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MoGuQAQ - 个人主页</title>
+
+  <!-- Vue CDN -->
+  <script src="https://cdn.bytedance.com/cdn/expire-1-M/vue/3.2.31/vue.global.prod.js"></script>
+
+  <!-- Element Plus CDN -->
+  <script src="https://cdn.bytedance.com/cdn/expire-1-M/element-plus/2.0.4/index.full.min.js"></script>
+  <link href="https://cdn.bytedance.com/cdn/expire-1-M/element-plus/2.0.4/index.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.bytedance.com/cdn/expire-1-M/bootstrap-icons/1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <!-- 自定义样式 -->
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .fixed-blur-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9998;
+
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255, 0.1);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .fixed-blur-footer a {
+      color: #333;
+      text-decoration: none;
+      margin-left: 5px;
+    }
+
+    .fixed-blur-footer a:hover {
+      color: #409EFF;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", sans-serif;
+      background: url('https://t.alcy.cc/ycy') no-repeat center center fixed;
+      background-size: cover;
+      color: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+    }
+
+    .loading {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background: #111;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      color: white;
+      font-weight: bold;
+      transition: opacity 0.4s ease;
+    }
+
+    .container {
+      display: flex;
+      width: 90%;
+      max-width: 1200px;
+      gap: 2rem;
+      padding: 2rem;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+    }
+
+    .left {
+      flex: 1;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    .avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 3px solid white;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .contact-info {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255, 0.1);
+      width: 100%;
+    }
+
+    .contact-info p {
+      margin: 0.3rem 0;
+      color: white;
+    }
+
+    .right {
+      flex: 2;
+      min-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .top-modules {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .module {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255, 0.1);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .quote {
+      font-size: 1.1rem;
+      font-style: italic;
+      color: #ddd;
+      margin: 0;
+    }
+
+    .quote-source {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-top: 5px;
+      text-align: right;
+    }
+
+    .date {
+      font-size: 0.9rem;
+      color: #bbb;
+      font-weight: normal;
+    }
+
+    .clock {
+      font-size: 1.5rem;
+      font-weight: blod;
+      color: #ccc;
+    }
+
+    .sites-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .site-block {
+      flex: 1 1 120px;
+      min-width: 140px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: center;
+      color: #eee;
+      font-size: 2rem;
+    }
+
+    .site-block:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .site-title {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .socials-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .social-block {
+      flex: 1 1 10px;
+      min-width: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: center;
+      color: #eee;
+      font-size: 1.5rem;
+    }
+
+    .social-block:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .social-title {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <noscript><div style="text-align:center">请开启 JavaScript</div></noscript>
+  <!-- 加载动画 -->
+  <div id="loading" class="loading">正在加载...</div>
+
+  <!-- 页面内容 -->
+  <div id="app" class="container">
+    <div class="left">
+      <div class="avatar">
+        <img src="https://avatars.githubusercontent.com/u/67809394" alt="头像">
+      </div>
+      <div class="contact-info">
+        <p><img width="200" height="25" src="https://glitch-art.vercel.app/api/simple?word=Hi%20I'm%20MoGuQAQ&font=Doto" /></p>
+        <p>中国 · 全栈开发者</p>
+      </div>
+      <div class="socials-container">
+        <div class="social-block" v-for="item in socials" :key="item.name" @click="goto(item.url)" >
+          <i :class="['bi', 'bi-' + item.icon]"></i>
+          <span class="social-title" style="width: 12em;" hidden>{{ item.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="top-modules">
+        <!-- 一言模块 -->
+        <div class="module">
+          <h3><i class="bi bi-balloon-heart-fill"></i> 一言</h3>
+          <p class="quote">{{ quoteText }}</p>
+          <p class="quote-source" v-if="quoteAuthor">--- {{ quoteAuthor }}</p>
+          <p class="quote-source" v-else>--- 来源未知</p>
+        </div>
+
+        <!-- 时钟模块 -->
+        <div class="module">
+          <h3><i class="bi bi-clock-fill"></i> 时钟</h3>
+          <div class="date">{{ date }}</div>
+          <div class="clock">{{ time }}</div>
+        </div>
+      </div>
+
+      <!-- 网站链接模块 -->
+      <div class="sites-container">
+        <div class="site-block" v-for="item in sites" :key="item.name" @click="goto(item.url)" >
+          <i :class="['bi', 'bi-' + item.icon]"></i>
+          <span class="site-title" style="width: 12em;">{{ item.name }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+   <!-- 网站页脚模块 -->
+  <footer>
+    <div class="fixed-blur-footer">
+      <span>
+        Copyright&nbsp;©&nbsp;2025 
+        <a href="https://www.moguq.top" target="_blank">MoGuQAQ</a>
+      </span>
+    </div>
+  </footer>
+
+
+  <!-- Vue -->
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      setup() {
+        const quoteText = Vue.ref('加载中...');
+        const quoteAuthor = Vue.ref('');
+        const time = Vue.ref('--:--:--');
+        const date = Vue.ref('--');
+
+        const sites = [
+          { name: "博客", icon: 'bootstrap-fill', url: 'https://blog.moguq.top' },
+        ];
+
+        const socials = [
+          { name: "GitHub", icon: 'github', url: 'https://github.com/mogumc' },
+        ];
+
+        const goto = (url) => window.open(url, '_blank');
+
+        // 获取一言
+        Vue.onMounted(() => {
+          fetch('https://v1.hitokoto.cn/')
+            .then(res => res.json())
+            .then(data => {
+              quoteText.value = data.hitokoto;
+              quoteAuthor.value = data.from;
+            })
+            .catch(() => {
+              quoteText.value = '获取失败';
+              quoteAuthor.value = '';
+            });
+        });
+
+        // 实时更新时钟
+        const updateClock = () => {
+          const now = new Date();
+          time.value = now.toLocaleTimeString();
+          date.value = now.toLocaleDateString();
+        };
+
+        Vue.onMounted(() => {
+          updateClock();
+          setInterval(updateClock, 1000);
+        });
+
+        return {
+          quoteText,
+          quoteAuthor,
+          time,
+          date,
+          sites,
+          socials,
+          goto
+        };
+      }
+    }).mount('#app');
+
+    // 加载完成后隐藏 loading 界面
+    window.addEventListener('load', () => {
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.style.opacity = '0';
+        setTimeout(() => loading.remove(), 400);
+      }
+    });
+  </script>
+</body>
+</html>
