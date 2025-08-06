@@ -52,7 +52,7 @@
     }
 
     .fixed-blur-footer a {
-      color: #333;
+      color: #fff;
       text-decoration: none;
       margin-left: 5px;
     }
@@ -120,14 +120,14 @@
     }
 
     .sites-container {
-      display: flex;
+      display: grid;
       flex-wrap: wrap;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 1rem;
     }
 
     .site-block {
-      flex: 1 1 120px;
-      min-width: 200px;
+      min-width: 150px;
       background: rgba(255, 255, 255, 0.06);
       padding: 1rem;
       border-radius: 12px;
@@ -182,11 +182,9 @@
         </div>
       </div>
     </div>
+    <!-- 单纯给页脚空出点空间防止被盖住:) -->
+    <div style="height: 60px"></div>
   </div>
-
-  <!-- 单纯给页脚空出点空间防止被盖住:) -->
-  <br>
-  <br>
   
    <!-- 网站页脚 -->
   <footer>
@@ -207,7 +205,6 @@
 
         const sites = [
           { name: "博客", icon: 'bootstrap-fill', url: 'https://blog.moguq.top' },
-          { name: "主页", icon: 'house-door-fill', url: 'https://www.moguq.top' },
         ];
 
         const goto = (url) => window.open(url, '_blank');

@@ -37,7 +37,7 @@
     }
 
     .fixed-blur-footer a {
-      color: #333;
+      color: #fff;
       text-decoration: none;
       margin-left: 5px;
     }
@@ -184,14 +184,14 @@
     }
 
     .sites-container {
-      display: flex;
+      display: grid;
       flex-wrap: wrap;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 1rem;
     }
 
     .site-block {
-      flex: 1 1 120px;
-      min-width: 140px;
+      min-width: 150px;
       background: rgba(255, 255, 255, 0.06);
       padding: 1rem;
       border-radius: 12px;
@@ -219,34 +219,67 @@
     .socials-container {
       display: flex;
       flex-wrap: wrap;
+      max-width: 100%;
       gap: 1rem;
     }
 
     .social-block {
-      flex: 1 1 10px;
+      flex: 0 0 auto;
       min-width: 10px;
+      max-width: 3rem;
+      max-height: 3rem;
       background: rgba(255, 255, 255, 0.06);
-      padding: 1rem;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       transition: 0.2s;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      text-align: center;
+      justify-content: center;
+      aspect-ratio: 1 / 1;
+      position: relative;
       color: #eee;
-      font-size: 1.5rem;
+      font-size: 1rem;
+      text-align: center;
+      padding: 1rem;
+      box-sizing: border-box;
     }
 
-    .social-block:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .icon-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-wrapper i {
+      font-size: 1.2rem;
+      transition: 0.3s;
+    }
+
+    .social-block:hover .social-title {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1.1);
     }
 
     .social-title {
-      font-size: 1rem;
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
       font-weight: bold;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      pointer-events: none;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
     }
 
     @media (max-width: 768px) {
@@ -260,6 +293,7 @@
 
 <body>
   <noscript><div style="text-align:center">请开启 JavaScript</div></noscript>
+  
   <!-- 加载动画 -->
   <div id="loading" class="loading">正在加载...</div>
 
@@ -272,11 +306,14 @@
       <div class="contact-info">
         <p><img width="200" height="25" src="https://glitch-art.vercel.app/api/simple?word=Hi%20I'm%20MoGuQAQ&font=Doto" /></p>
         <p>中国 · 全栈开发者</p>
+        <p>大数据 · Go · Java · Vue</p>
       </div>
       <div class="socials-container">
-        <div class="social-block" v-for="item in socials" :key="item.name" @click="goto(item.url)" >
-          <i :class="['bi', 'bi-' + item.icon]"></i>
-          <span class="social-title" style="width: 12em;" hidden>{{ item.name }}</span>
+        <div class="social-block" v-for="item in socials" :key="item.name" @click="goto(item.url)">
+          <div class="icon-wrapper">
+            <i :class="['bi', 'bi-' + item.icon]"></i>
+          </div>
+          <span class="social-title">{{ item.name }}</span>
         </div>
       </div>
     </div>
@@ -288,7 +325,7 @@
           <h3><i class="bi bi-balloon-heart-fill"></i> 一言</h3>
           <p class="quote">{{ quoteText }}</p>
           <p class="quote-source" v-if="quoteAuthor">--- {{ quoteAuthor }}</p>
-          <p class="quote-source" v-else>--- 来源未知</p>
+          <p class="quote-source" v-else>--- 未知</p>
         </div>
 
         <!-- 时钟模块 -->
@@ -307,9 +344,11 @@
         </div>
       </div>
     </div>
+    <!-- 单纯给页脚空出点空间防止被盖住:) -->
+    <div style="height: 60px"></div>
   </div>
 
-   <!-- 网站页脚模块 -->
+   <!-- 网站页脚 -->
   <footer>
     <div class="fixed-blur-footer">
       <span>
@@ -319,8 +358,7 @@
     </div>
   </footer>
 
-
-  <!-- Vue -->
+  <!-- Vue组件 -->
   <script>
     const { createApp } = Vue;
 
@@ -333,6 +371,7 @@
 
         const sites = [
           { name: "博客", icon: 'bootstrap-fill', url: 'https://blog.moguq.top' },
+          
         ];
 
         const socials = [
