@@ -27,7 +27,6 @@
       left: 0;
       right: 0;
       z-index: 9998;
-
       background: rgba(255, 255, 255, 0.08);
       border-radius: 12px;
       backdrop-filter: blur(10px);
@@ -50,6 +49,7 @@
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      padding-bottom: 60px;
       font-family: "Segoe UI", sans-serif;
       background: url('https://t.alcy.cc/ycy') no-repeat center center fixed;
       background-size: cover;
@@ -91,6 +91,10 @@
 
     .container {
       display: flex;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       width: 90%;
       max-width: 1200px;
       gap: 2rem;
@@ -140,7 +144,7 @@
 
     .right {
       flex: 2;
-      min-width: 400px;
+      min-width: 280px;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -153,6 +157,7 @@
 
     .module {
       flex: 1;
+      width: 100%;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 12px;
       backdrop-filter: blur(10px);
@@ -190,12 +195,12 @@
     .sites-container {
       display: grid;
       flex-wrap: wrap;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 1rem;
     }
 
     .site-block {
-      min-width: 150px;
+      min-width: 140px;
       background: rgba(255, 255, 255, 0.06);
       padding: 1rem;
       border-radius: 12px;
@@ -286,11 +291,11 @@
       color: #fff;
     }
 
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-        align-items: stretch;
-      }
+    html {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
     }
   </style>
 </head>
@@ -344,7 +349,7 @@
       <div class="sites-container">
         <div class="site-block" v-for="item in sites" :key="item.name" @click="goto(item.url)" >
           <i :class="['bi', 'bi-' + item.icon]"></i>
-          <span class="site-title" style="width: 12em;">{{ item.name }}</span>
+          <span class="site-title">{{ item.name }}</span>
         </div>
       </div>
     </div>
@@ -375,7 +380,6 @@
 
         const sites = [
           { name: "博客", icon: 'bootstrap-fill', url: 'https://blog.moguq.top' },
-          
         ];
 
         const socials = [
