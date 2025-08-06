@@ -20,7 +20,7 @@
 - [無名の主页 - CF](https://mogug.top)
 
 # 修改
-找到以下页面  
+在文件中找到以下字段  
 <img width="622" height="161" alt="image" src="https://github.com/user-attachments/assets/11c6f2da-1a6d-48ec-a4ba-426f4d54d111" />
 
 在``sites``字段与``socials``中按格式添加  
