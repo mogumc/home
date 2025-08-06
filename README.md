@@ -16,8 +16,8 @@
 
 > 由于 CDN 缓存原因，查看最新效果可能需要 `Ctrl` + `F5` 强制刷新浏览器缓存
 
-- [蘑菇の主页 - EO](https://www.mogug.top)
-- [蘑菇の主页 - CF](https://mogug.top)
+- [蘑菇の主页 - EO](https://www.moguq.top)
+- [蘑菇の主页 - CF](https://moguq.top)
 
 # 修改
 在文件中找到以下字段  
