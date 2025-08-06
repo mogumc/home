@@ -2,7 +2,7 @@
 纯html实现的Vue + Element-plus个人主页
 
 # 页面
-<img width="1306" height="795" alt="cut" src="https://github.com/user-attachments/assets/1b058557-1b67-4f88-a0c7-374471848666" />
+<img width="1306" height="795" alt="cut" src="https://pic.moguq.top/images/250807-home01.png" />
 
 ## 功能
 
@@ -21,7 +21,7 @@
 
 # 修改
 在文件中找到以下字段  
-<img width="622" height="161" alt="image" src="https://github.com/user-attachments/assets/11c6f2da-1a6d-48ec-a4ba-426f4d54d111" />
+<img width="622" height="161" alt="image" src="https://pic.moguq.top/images/250807-home02.png" />
 
 在``sites``字段与``socials``中按格式添加  
 name： 显示的文字 icon: 使用bootstrap-icons库,默认版本为1.8(如需使用新版本图标请修改cdn地址) url: 点击跳转的地址  
