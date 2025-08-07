@@ -1,5 +1,6 @@
 # home
-纯html实现的Vue + Element-plus个人主页
+纯html实现的Vue + Element-plus个人主页  
+[部署教程](https://blog.moguq.top/posts/25080701/)
 
 # 页面
 <img width="1306" height="795" alt="cut" src="https://pic.moguq.top/images/250807-home01.png" />
