@@ -1,5 +1,6 @@
 # home
 Vue实现的单html文件个人主页  
+额外提供了统一UI的错误页/音乐播放器/网址集  
 [部署教程](https://blog.moguq.top/posts/25080701/)
 
 # 页面
