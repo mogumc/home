@@ -471,18 +471,21 @@
           const currentTime = audio.currentTime
           if (isNaN(currentTime)) return
           const step = duration * 0.005;
-          console.log(timeOffset)
           switch (e.key) {
             case 'ArrowLeft':
               event.preventDefault()
               if (timeOffset.value != 0 ){
-                 timeOffset.value = Math.max(0,timeOffset.value - step);
+                timeOffset.value = Math.max(0,timeOffset.value - step);
+                const displayPercent = (timeOffset.value / duration) * 100;
+                progress.value = displayPercent;
               }
               break
             case 'ArrowRight':
               event.preventDefault()
               if (timeOffset.value != 0 ){
                 timeOffset.value = Math.min(duration,timeOffset.value + step);
+                const displayPercent = (timeOffset.value / duration) * 100;
+                progress.value = displayPercent;
               }
               break
             case ' ':
@@ -495,7 +498,6 @@
         function handleKeyUp(e) {
           const audio = audioPlayer.value;
           if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio) {
-            console.log(timeOffset.value)
             audio.currentTime = timeOffset.value;
             timeOffset.value = 0;
           }
@@ -572,7 +574,6 @@
           var currentDisplayTime = currentTime;
           if (timeOffset.value != 0 ) {
             currentDisplayTime = timeOffset.value;
-            console.log(timeOffset.value);
           }
           const displayPercent = (currentDisplayTime / duration) * 100;
           progress.value = displayPercent;
