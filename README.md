@@ -1,5 +1,5 @@
 # home
-纯html实现的Vue + Element-plus个人主页  
+纯html实现的Vue个人主页  
 [部署教程](https://blog.moguq.top/posts/25080701/)
 
 # 页面
