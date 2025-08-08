@@ -260,14 +260,6 @@
       color: #7E7E7E
     }
 
-   @media (max-width: 768px) {
-      .music-modules {
-        flex-direction: column;
-      }
-      .top-modules {
-        display: none;
-      }
-    }
   </style>
 </head>
 
@@ -538,40 +530,102 @@
           return parsed.sort((a, b) => a.time - b.time);
         }
 
+        function isTextEmpty(text) {
+          return !text || text.trim() === '';
+        }
+
         function updateLyrics(currentTime) {
           let currentLyrics = '';
-          let foundIndex = -1;
+          const activeIndices = [];
+
           for (let i = 0; i < lrcLines.value.length; i++) {
-            if (lrcLines.value[i].time <= currentTime &&
-                (i === lrcLines.value.length - 1 || lrcLines.value[i + 1].time > currentTime)) {
-              foundIndex = i;
-              break;
+            const current = lrcLines.value[i];
+            const next = lrcLines.value[i + 1];
+
+            if (current.time <= currentTime && (!next || next.time > currentTime)) {
+              activeIndices.push(i);
             }
           }
 
-          if (foundIndex !== -1) {
-            if (foundIndex > 0) {
-              if (lrcLines.value[foundIndex - 1].time == lrcLines.value[foundIndex - 1].time) {
-                currentLyrics += `<div style="color:#fff;"><strong>${lrcLines.value[foundIndex -1].text}</strong></div>`; 
-              } else {
-                currentLyrics += `<div>${lrcLines.value[foundIndex - 1].text}</div>`;
+          const additionalIndices = [];
+
+          activeIndices.forEach(index => {
+            const targetTime = lrcLines.value[index].time;
+
+            for (let i = 0; i < lrcLines.value.length; i++) {
+              if (activeIndices.includes(i)) continue;
+              if (Math.abs(lrcLines.value[i].time - targetTime) < 0.001 && !isTextEmpty(lrcLines.value[i].text)) {
+                additionalIndices.push(i);
               }
             }
-            currentLyrics += `<div style="color:#fff;"><strong>${lrcLines.value[foundIndex].text}</strong></div>`; 
-            if (foundIndex < lrcLines.value.length - 1) {
-              if (lrcLines.value[foundIndex + 1].time == lrcLines.value[foundIndex - 1].time) {
-                currentLyrics += `<div style="color:#fff;"><strong>${lrcLines.value[foundIndex + 1].text}</strong></div>`; 
-              } else {
-                currentLyrics += `<div>${lrcLines.value[foundIndex + 1].text}</div>`;
-              }
-            
+          });
+
+          activeIndices.push(...additionalIndices);
+
+          if (activeIndices.length === 0) {
+            lyrics.value = `<div>暂无歌词</div>`;
+            return;
+          }
+
+          const displayLinesSet = new Set();
+
+          activeIndices.forEach(i => {
+            if (!isTextEmpty(lrcLines.value[i].text)) {
+              displayLinesSet.add(i);
             }
+          });
+
+          if (displayLinesSet.size === 0) {
+            const baseIndex = activeIndices[0];
+            for (let i = 0; i < lrcLines.value.length; i++) {
+              const idx1 = baseIndex - 1 - i;
+              if (idx1 >= 0 && !isTextEmpty(lrcLines.value[idx1].text)) {
+                displayLinesSet.add(idx1);
+                break;
+              }
+              const idx2 = baseIndex + 1 + i;
+              if (idx2 < lrcLines.value.length && !isTextEmpty(lrcLines.value[idx2].text)) {
+                displayLinesSet.add(idx2);
+                break;
+              }
+            }
+          }
+
+          const firstIndex = Math.min(...activeIndices);
+          const lastIndex = Math.max(...activeIndices);
+          const upLineIndex = firstIndex - 1;
+          const downLineIndex = lastIndex + 1;
+
+          if (upLineIndex >= 0 && !isTextEmpty(lrcLines.value[upLineIndex].text)) {
+            displayLinesSet.add(upLineIndex);
+          }
+
+          if (downLineIndex < lrcLines.value.length) {
+            displayLinesSet.add(downLineIndex);
+          }
+
+          const displayIndices = Array.from(displayLinesSet).sort((a, b) => a - b);
+
+          if (displayIndices.length > 0) {
+            displayIndices.forEach(i => {
+              const line = lrcLines.value[i];
+              const isCurrent = activeIndices.includes(i);
+              if (isTextEmpty(line.text)) {
+                line.text = "♫ ♫ ♫";
+              }
+              if (isCurrent) {
+                currentLyrics += `<div style="color:#fff;"><strong>${line.text}</strong></div>`;
+              } else {
+                currentLyrics += `<div>${line.text}</div>`;
+              }
+            });
           } else {
-            currentLyrics += `<div>暂无歌词</div>`;
+            currentLyrics = `<div>暂无歌词</div>`;
           }
 
           lyrics.value = currentLyrics;
         }
+
 
         return {
           quoteText,
