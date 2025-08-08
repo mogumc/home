@@ -153,10 +153,14 @@
     }
 
 
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-        align-items: stretch;
+    @media (max-width: 375px) {
+      .module {
+        flex: 1;
+      }
+      .sites-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
       }
     }
   </style>
