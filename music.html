@@ -405,6 +405,7 @@
         const audioPlayer = ref();
         const lrcLines = ref([]);
         const timeOffset = ref(0);
+        const isHold = ref(false)
         const volume = ref(0.7);
         onMounted(() => {
           // 获取歌单信息
@@ -447,22 +448,13 @@
 
         onMounted(() => {
           window.addEventListener('keydown', handleKeyDown)
-          window.addEventListener('keydown', handleKeyDownTime)
           window.addEventListener('keyup', handleKeyUp)
         })
 
         onUnmounted(() => {
           window.removeEventListener('keydown', handleKeyDown)
-          window.removeEventListener('keydown', handleKeyDownTime)
           window.removeEventListener('keyup', handleKeyUp)
         })
-
-        function handleKeyDownTime(e){
-          const audio = audioPlayer.value;
-          if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio && timeOffset.value == 0) {
-            timeOffset.value = audio.currentTime;
-          }
-        }
 
         function handleKeyDown(e) {
           const audio = audioPlayer.value;
@@ -470,7 +462,8 @@
           if (isNaN(duration) || duration <= 0) return
           const currentTime = audio.currentTime
           if (isNaN(currentTime)) return
-          const step = duration * 0.005;
+          var step = (Math.max(timeOffset.value,currentTime) - Math.min(timeOffset.value,currentTime) + 20) * 0.03;
+          
           switch (e.key) {
             case 'ArrowLeft':
               event.preventDefault()
@@ -478,14 +471,19 @@
                 timeOffset.value = Math.max(0,timeOffset.value - step);
                 const displayPercent = (timeOffset.value / duration) * 100;
                 progress.value = displayPercent;
+              } else {
+                timeOffset.value = Math.max(0, audio.currentTime - duration * 0.03);
               }
               break
             case 'ArrowRight':
               event.preventDefault()
               if (timeOffset.value != 0 ){
+                isHold.value = true
                 timeOffset.value = Math.min(duration,timeOffset.value + step);
                 const displayPercent = (timeOffset.value / duration) * 100;
                 progress.value = displayPercent;
+              } else {
+                timeOffset.value = Math.min(duration, audio.currentTime + duration * 0.03);
               }
               break
             case ' ':
@@ -500,6 +498,7 @@
           if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio) {
             audio.currentTime = timeOffset.value;
             timeOffset.value = 0;
+            isHold.value = false
           }
           return;
         }
