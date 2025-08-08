@@ -189,7 +189,7 @@
     .fixed-blur-footer a:hover {
       color: #409EFF;
     }
-    
+
     .custom-player {
       display: flex;
       flex-direction: column;
@@ -251,7 +251,7 @@
     .lyric-box {
       max-height: 200px;
       min-height: 100px;
-      overflow-y: auto;
+      overflow: hidden;
       padding: 10px;
       margin-top: 10px;
       font-size: 16px;
@@ -271,7 +271,7 @@
         color: #66ccff;
       }
     }
-    
+
     @media (max-width: 768px) {
       .music-modules {
         flex-direction: column;
@@ -384,7 +384,7 @@
   </footer>
 
   <script>
-    const { createApp, ref, onMounted } = Vue;
+    const { createApp, ref, onMounted, onUnmounted } = Vue;
 
     createApp({
       setup() {
@@ -404,45 +404,103 @@
         const isPlaying = ref(false);
         const audioPlayer = ref();
         const lrcLines = ref([]);
+        const timeOffset = ref(0);
         const volume = ref(0.7);
-      onMounted(() => {
-        // 获取歌单信息
-        fetch('https://dev.moguq.top/netease?id=2003734815&limit=50&tls=1')
-          .then(res => res.json())
-          .then(data => {
-            if (data.code === 200) {
-              const songs = data.data || [];
-              console.log('Loaded songs:', songs);
-              songList.value = songs;
-              if (songs.length > 0) loadAndPlay(songs[0], 0);
-            }
-          })
-          .catch(() => {
-            console.error('歌单加载失败');
-              // 歌单加载失败，使用备用歌曲
-              songList.value = [{
-              title: "花がら",
-              author: "tayori",
-              url: "https://pic.moguq.top/files/hana.mp3",
-              lrc: "https://pic.moguq.top/files/hana.lrc"
-            }];
-            loadAndPlay(songList.value[0], 0);
-          });
+        onMounted(() => {
+          // 获取歌单信息
+          fetch('https://dev.moguq.top/netease?id=2003734815&limit=20&tls=1')
+            .then(res => res.json())
+            .then(data => {
+              if (data.code === 200) {
+                const songs = data.data || [];
+                console.log('Loaded songs:', songs);
+                songList.value = songs;
+                if (songs.length > 0) loadAndPlay(songs[0], 0);
+              }
+            })
+            .catch(() => {
+              console.error('歌单加载失败');
+                // 歌单加载失败，使用备用歌曲
+                songList.value = [{
+                title: "花がら",
+                author: "tayori",
+                url: "https://pic.moguq.top/files/hana.mp3",
+                lrc: "https://pic.moguq.top/files/hana.lrc"
+              }];
+              loadAndPlay(songList.value[0], 0);
+            });
 
-        fetch('https://v1.hitokoto.cn/')
-          .then(res => res.json())
-          .then(data => {
-            quoteText.value = data.hitokoto;
-            quoteAuthor.value = data.from;
-          });
+          fetch('https://v1.hitokoto.cn/')
+            .then(res => res.json())
+            .then(data => {
+              quoteText.value = data.hitokoto;
+              quoteAuthor.value = data.from;
+            });
 
-        const tick = () => {
-          time.value = new Date().toLocaleTimeString();
-          date.value = new Date().toLocaleDateString();
-        };
-        tick();
-        setInterval(tick, 1000);
-      });
+          const tick = () => {
+            time.value = new Date().toLocaleTimeString();
+            date.value = new Date().toLocaleDateString();
+          };
+          tick();
+          setInterval(tick, 1000);
+        });
+
+        onMounted(() => {
+          window.addEventListener('keydown', handleKeyDown)
+          window.addEventListener('keydown', handleKeyDownTime)
+          window.addEventListener('keyup', handleKeyUp)
+        })
+
+        onUnmounted(() => {
+          window.removeEventListener('keydown', handleKeyDown)
+          window.removeEventListener('keydown', handleKeyDownTime)
+          window.removeEventListener('keyup', handleKeyUp)
+        })
+
+        function handleKeyDownTime(e){
+          const audio = audioPlayer.value;
+          if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio && timeOffset.value == 0) {
+            timeOffset.value = audio.currentTime;
+          }
+        }
+
+        function handleKeyDown(e) {
+          const audio = audioPlayer.value;
+          const duration = audio.duration
+          if (isNaN(duration) || duration <= 0) return
+          const currentTime = audio.currentTime
+          if (isNaN(currentTime)) return
+          const step = duration * 0.005;
+          console.log(timeOffset)
+          switch (e.key) {
+            case 'ArrowLeft':
+              event.preventDefault()
+              if (timeOffset.value != 0 ){
+                 timeOffset.value = Math.max(0,timeOffset.value - step);
+              }
+              break
+            case 'ArrowRight':
+              event.preventDefault()
+              if (timeOffset.value != 0 ){
+                timeOffset.value = Math.min(duration,timeOffset.value + step);
+              }
+              break
+            case ' ':
+              togglePlay()
+              break
+          }
+        }
+
+
+        function handleKeyUp(e) {
+          const audio = audioPlayer.value;
+          if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio) {
+            console.log(timeOffset.value)
+            audio.currentTime = timeOffset.value;
+            timeOffset.value = 0;
+          }
+          return;
+        }
 
         function loadSong(song, index) {
           currentSongIndex.value = index;
@@ -508,8 +566,16 @@
 
         function onTimeUpdate(e) {
           const audio = e.target;
-          const percent = (audio.currentTime / audio.duration) * 100 || 0;
-          progress.value = percent;
+          const duration = audio.duration;
+          if (isNaN(duration) || duration <= 0) return;
+          const currentTime = audio.currentTime;
+          var currentDisplayTime = currentTime;
+          if (timeOffset.value != 0 ) {
+            currentDisplayTime = timeOffset.value;
+            console.log(timeOffset.value);
+          }
+          const displayPercent = (currentDisplayTime / duration) * 100;
+          progress.value = displayPercent;
           currentTimeFormatted.value = formatTime(audio.currentTime);
           if (!isNaN(audio.duration)) {
             durationFormatted.value = formatTime(audio.duration);
