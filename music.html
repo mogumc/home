@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MoGuQAQ - 音乐播放器</title>
+
+  <!-- Vue CDN -->
+  <script src="https://cdn.bytedance.com/cdn/expire-1-M/vue/3.2.31/vue.global.prod.js"></script>
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.bytedance.com/cdn/expire-1-M/bootstrap-icons/1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", sans-serif;
+      background: url('https://t.alcy.cc/ycy') no-repeat center center fixed;
+      background-size: cover;
+      color: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+    }
+
+    .loading {
+      position: fixed;
+      top: 0; left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: #111;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      color: white;
+      font-weight: bold;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .left {
+      flex: 1;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1.5rem;
+    }
+
+    .avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 3px solid white;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .contact-info {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255, 0.1);
+      width: 100%;
+    }
+
+    .contact-info p {
+      margin: 0.3rem 0;
+      color: white;
+    }
+
+    .right {
+      flex: 2;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .top-modules {
+      display: flex;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .module {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255, 0.1);
+      padding: 1rem;
+    }
+
+    .quote {
+      font-size: 1.1rem;
+      font-style: italic;
+      color: #ddd;
+    }
+
+    .quote-source {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-top: 5px;
+      text-align: right;
+    }
+
+    .date {
+      font-size: 0.9rem;
+      color: #bbb;
+    }
+
+    .clock {
+      font-size: 1.5rem;
+      color: #ccc;
+    }
+
+    .music-modules {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .fixed-blur-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9998;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255, 0.1);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .fixed-blur-footer a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 5px;
+    }
+
+    .custom-player {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .audio-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      font-size: 1.5rem;
+    }
+
+    .audio-panel:hover {
+    color: #66ccff;
+    }
+
+    .audio-controls button {
+      padding: 8px 12px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .audio-progress-container {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      background: #555;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: #fff;
+      width: 0%;
+    }
+
+    .audio-time {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .progress-thumb {
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: -2px;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .lyric-box {
+      max-height: 200px;
+      min-height: 100px;
+      overflow-y: auto;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      text-align: left;
+      line-height: 1.5;
+      color: #7E7E7E
+    }
+
+  </style>
+</head>
+
+<body>
+  <noscript><div style="text-align:center">请开启 JavaScript</div></noscript>
+
+  <!-- 加载动画 -->
+  <div id="loading" class="loading">正在加载...</div>
+
+  <!-- 页面内容 -->
+  <div id="app" class="container">
+    <div class="left">
+      <div class="avatar">
+        <img src="https://avatars.githubusercontent.com/u/67809394" alt="头像">
+      </div>
+      <div class="contact-info">
+        <div class="lyric-box" v-html="lyrics"></div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="top-modules">
+        <!-- 一句一言 -->
+        <div class="module">
+          <h3><i class="bi bi-balloon-heart-fill"></i> 一言</h3>
+          <p class="quote">{{ quoteText }}</p>
+          <p v-if="quoteAuthor" class="quote-source">--- {{ quoteAuthor }}</p>
+          <p v-else class="quote-source">--- 未知</p>
+        </div>
+
+        <!-- 时间时钟 -->
+        <div class="module">
+          <h3><i class="bi bi-clock-fill"></i> 时钟</h3>
+          <p class="date">{{ date }}</p>
+          <p class="clock">{{ time }}</p>
+        </div>
+      </div>
+
+      <!-- 音乐播放器区域 -->
+      <div class="music-modules">
+        <div class="module">
+          <h3><i class="bi bi-music-note-beamed"></i> 音乐播放器</h3>
+          <div class="custom-player">
+            <audio v-if="currentSongUrl"
+                   @timeupdate="onTimeUpdate"
+                   @ended="nextSong"
+                   :volume="volume"
+                   ref="audioPlayer">
+              <source :src="currentSongUrl" type="audio/mpeg">
+              浏览器不支持
+            </audio>
+
+            <div class="audio-controls">
+              <a @click="prevSong" class="audio-panel">
+                <i class="bi bi-skip-backward-fill"></i>
+              </a>
+
+              <a @click="togglePlay" class="audio-panel">
+                <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'"></i>
+              </a>
+
+              <a @click="nextSong" class="audio-panel">
+                <i class="bi bi-skip-forward-fill"></i>
+              </a>
+            </div>
+
+            <div @click="seekTo" class="audio-progress-container">
+              <div class="progress-bar" :style="{ width: progress + '%' }"></div>
+              <div class="progress-thumb" :style="{ left: progress + '%' }"></div>
+            </div>
+
+            <div class="audio-time">
+              {{ currentTimeFormatted }} / {{ durationFormatted }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 歌曲信息 -->
+        <div class="module">
+          <h3><i class="bi bi-info-circle"></i> 歌曲信息</h3>
+          <p v-if="currentTitle"><strong>正在播放：</strong>{{ currentTitle }}</p>
+          <p v-else><strong>正在播放：</strong>未播放音乐</p>
+          <p v-if="currentArtist"><strong>歌手：</strong>{{ currentArtist }}</p>
+          <p v-else><strong>歌手：</strong>未知</p>
+
+          <!-- 音量控制 -->
+          <label for="volume"><strong>音量：</strong></label>
+          <input type="range" id="volume" v-model="volume" min="0" max="1" step="0.01" @input="changeVolume">
+        </div>
+      </div>
+
+      <!-- 防止页脚遮盖内容 -->
+      <div style="height: 60px;"></div>
+    </div>
+  </div>
+
+  <!-- 网站页脚 -->
+  <footer>
+    <div class="fixed-blur-footer">
+      <span>Copyright&nbsp;©&nbsp;2025 <a href="https://www.moguq.top" target="_blank">MoGuQAQ</a></span>
+    </div>
+  </footer>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const quoteText = ref('加载中...');
+        const currentTimeFormatted = ref('00:00');
+        const durationFormatted = ref('00:00');
+        const quoteAuthor = ref('');
+        const time = ref('--:--:--');
+        const date = ref('--');
+        const songList = ref([]);
+        const currentSongIndex = ref(0);
+        const currentTitle = ref('');
+        const currentArtist = ref('');
+        const currentSongUrl = ref('');
+        const lyrics = ref('暂无歌词');
+        const progress = ref(0);
+        const isPlaying = ref(false);
+        const audioPlayer = ref();
+        const lrcLines = ref([]);
+        const volume = ref(0.7);
+      onMounted(() => {
+        // 获取歌单信息
+        fetch('https://dev.moguq.top/netease?id=2104812778&limit=50')
+          .then(res => res.json())
+          .then(data => {
+            if (data.code === 200) {
+              const songs = data.data || [];
+              console.log('Loaded songs:', songs);
+              songList.value = songs;
+              if (songs.length > 0) loadAndPlay(songs[0], 0);
+            }
+          })
+          .catch(() => {
+            console.error('歌单加载失败');
+              // 歌单加载失败，使用备用歌曲
+              songList.value = [{
+              title: "花がら",
+              author: "tayori",
+              url: "https://pic.moguq.top/files/hana.mp3",
+              lrc: "https://pic.moguq.top/files/hana.lrc"
+            }];
+            loadAndPlay(songList.value[0], 0);
+          });
+
+        fetch('https://v1.hitokoto.cn/')
+          .then(res => res.json())
+          .then(data => {
+            quoteText.value = data.hitokoto;
+            quoteAuthor.value = data.from;
+          });
+
+        const tick = () => {
+          time.value = new Date().toLocaleTimeString();
+          date.value = new Date().toLocaleDateString();
+        };
+        tick();
+        setInterval(tick, 1000);
+      });
+
+        function loadSong(song, index) {
+          currentSongIndex.value = index;
+          currentTitle.value = song.title;
+          currentArtist.value = song.author;
+          currentSongUrl.value = song.url;
+
+          lrcLines.value = [];
+          if (song.lrc) {
+            fetch(song.lrc)
+              .then(res => res.text())
+              .then(text => {
+                lrcLines.value = parseLrc(text);
+              });
+          }
+        }
+
+        function loadAndPlay(song, index) {
+          loadSong(song, index);
+          const audio = audioPlayer.value;
+          try{
+            audio.src = song.url;
+            audio.volume = volume.value;
+          } catch (error) {
+            lyrics.value = '<div style="color:#fff;"><strong>播放被浏览器阻止</strong></div><div style="color:#fff;"><strong>请手动点击开始播放</strong></div>';
+            console.error('播放被浏览器阻止，请手动点击播放按钮');
+          }
+          
+          setTimeout(() => {
+            audio.play().then(() => {
+              isPlaying.value = true;
+            }).catch(() => {
+              lyrics.value = '<div style="color:#fff;"><strong>播放被浏览器阻止</strong></div><div style="color:#fff;"><strong>请手动点击开始播放</strong></div>';
+              console.error('播放被浏览器阻止，请手动点击播放按钮');
+            });
+          }, 100);
+        }
+
+        function togglePlay() {
+          const audio = audioPlayer.value;
+          if (isPlaying.value) {
+            audio.pause();
+          } else {
+            audio.play();
+          }
+          isPlaying.value = !isPlaying.value;
+        }
+
+        function changeVolume() {
+          const audio = audioPlayer.value;
+          audio.volume = volume.value;
+        }
+
+        function nextSong() {
+          let nextIndex = (currentSongIndex.value + 1) % songList.value.length;
+          loadAndPlay(songList.value[nextIndex], nextIndex);
+        }
+
+        function prevSong() {
+          let prevIndex = (currentSongIndex.value - 1 + songList.value.length) % songList.value.length;
+          loadAndPlay(songList.value[prevIndex], prevIndex);
+        }
+
+        function onTimeUpdate(e) {
+          const audio = e.target;
+          const percent = (audio.currentTime / audio.duration) * 100 || 0;
+          progress.value = percent;
+          currentTimeFormatted.value = formatTime(audio.currentTime);
+          if (!isNaN(audio.duration)) {
+            durationFormatted.value = formatTime(audio.duration);
+          }
+          updateLyrics(audio.currentTime);
+        }
+
+        function formatTime(seconds) {
+          const m = Math.floor(seconds / 60);
+          const s = Math.floor(seconds % 60);
+          return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function seekTo(event) {
+          const container = event.target.closest('.audio-progress-container');
+          const rect = container.getBoundingClientRect();
+          const offsetX = event.clientX - rect.left;
+          const percent = offsetX / rect.width;
+          const duration = audioPlayer.value.duration;
+          if (!isNaN(duration)) {
+            audioPlayer.value.currentTime = percent * duration;
+          }
+        }
+
+        function parseLrc(lrcText) {
+          const lines = lrcText.split('\n');
+          const parsed = [];
+          lines.forEach(line => {
+            const match = line.match(/\[(\d+):(\d+\.\d+|\d+)\](.*)/);
+            if (match) {
+              const minutes = parseFloat(match[1]);
+              const seconds = parseFloat(match[2]);
+              const time = minutes * 60 + seconds;
+              const text = match[3].trim();
+              parsed.push({ time, text });
+            }
+          });
+          return parsed.sort((a, b) => a.time - b.time);
+        }
+
+        function updateLyrics(currentTime) {
+          let currentLyrics = '';
+          let foundIndex = -1;
+          for (let i = 0; i < lrcLines.value.length; i++) {
+            if (lrcLines.value[i].time <= currentTime &&
+                (i === lrcLines.value.length - 1 || lrcLines.value[i + 1].time > currentTime)) {
+              foundIndex = i;
+              break;
+            }
+          }
+
+          if (foundIndex !== -1) {
+            if (foundIndex > 0) {
+              if (lrcLines.value[foundIndex - 1].time == lrcLines.value[foundIndex - 1].time) {
+                currentLyrics += `<div style="color:#fff;"><strong>${lrcLines.value[foundIndex -1].text}</strong></div>`; 
+              } else {
+                currentLyrics += `<div>${lrcLines.value[foundIndex - 1].text}</div>`;
+              }
+            }
+            currentLyrics += `<div style="color:#fff;"><strong>${lrcLines.value[foundIndex].text}</strong></div>`; 
+            if (foundIndex < lrcLines.value.length - 1) {
+              if (lrcLines.value[foundIndex + 1].time == lrcLines.value[foundIndex - 1].time) {
+                currentLyrics += `<div style="color:#fff;"><strong>${lrcLines.value[foundIndex + 1].text}</strong></div>`; 
+              } else {
+                currentLyrics += `<div>${lrcLines.value[foundIndex + 1].text}</div>`;
+              }
+            
+            }
+          } else {
+            currentLyrics += `<div>暂无歌词</div>`;
+          }
+
+          lyrics.value = currentLyrics;
+        }
+
+        return {
+          quoteText,
+          quoteAuthor,
+          time,
+          date,
+          currentTitle,
+          currentArtist,
+          currentSongUrl,
+          lyrics,
+          progress,
+          isPlaying,
+          audioPlayer,
+          volume,
+          durationFormatted,
+          currentTimeFormatted,
+          togglePlay,
+          prevSong,
+          nextSong,
+          changeVolume,
+          onTimeUpdate,
+          seekTo
+        };
+      }
+    }).mount('#app');
+
+    // 加载完成后隐藏 loading 界面
+    window.addEventListener('load', () => {
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.classList.add('hide');
+        setTimeout(() => loading.remove(), 400);
+      }
+    });
+  </script>
+</body>
+</html>
