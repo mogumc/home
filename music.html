@@ -405,7 +405,6 @@
         const audioPlayer = ref();
         const lrcLines = ref([]);
         const timeOffset = ref(0);
-        const isHold = ref(false)
         const volume = ref(0.7);
         onMounted(() => {
           // 获取歌单信息
@@ -478,7 +477,6 @@
             case 'ArrowRight':
               event.preventDefault()
               if (timeOffset.value != 0 ){
-                isHold.value = true
                 timeOffset.value = Math.min(duration,timeOffset.value + step);
                 const displayPercent = (timeOffset.value / duration) * 100;
                 progress.value = displayPercent;
@@ -498,7 +496,6 @@
           if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio) {
             audio.currentTime = timeOffset.value;
             timeOffset.value = 0;
-            isHold.value = false
           }
           return;
         }
