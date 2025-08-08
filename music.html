@@ -200,10 +200,6 @@
       font-size: 1.5rem;
     }
 
-    .audio-panel:hover {
-    color: #66ccff;
-    }
-
     .audio-controls button {
       padding: 8px 12px;
       background: #444;
@@ -260,6 +256,18 @@
       color: #7E7E7E
     }
 
+    @media (hover: hover) {
+      .audio-panel:hover {
+        color: #66ccff;
+      }
+    }
+
+    @media (hover: none) {
+      .audio-panel:active {
+        color: #66ccff;
+      }
+    }
+    
     @media (max-width: 768px) {
       .music-modules {
         flex-direction: column;
