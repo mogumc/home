@@ -60,13 +60,17 @@
     }
 
     .container {
+      display: flex;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       width: 90%;
       max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      display: flex;
-      flex-wrap: wrap;
       gap: 2rem;
+      padding: 2rem;
+      box-sizing: border-box;
+      flex-wrap: wrap;
     }
 
     .left {
@@ -119,16 +123,17 @@
     .top-modules {
       display: flex;
       gap: 1rem;
-      text-align: center;
     }
 
     .module {
       flex: 1;
+      width: 100%;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 12px;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255, 0.1);
       padding: 1rem;
+      text-align: center;
     }
 
     .quote {
@@ -147,10 +152,12 @@
     .date {
       font-size: 0.9rem;
       color: #bbb;
+      font-weight: normal;
     }
 
     .clock {
       font-size: 1.5rem;
+      font-weight: blod;
       color: #ccc;
     }
 
@@ -286,8 +293,8 @@
         <!-- 时间时钟 -->
         <div class="module">
           <h3><i class="bi bi-clock-fill"></i> 时钟</h3>
-          <p class="date">{{ date }}</p>
-          <p class="clock">{{ time }}</p>
+          <div class="date">{{ date }}</div>
+          <div class="clock">{{ time }}</div>
         </div>
       </div>
 
@@ -380,7 +387,7 @@
         const volume = ref(0.7);
       onMounted(() => {
         // 获取歌单信息
-        fetch('https://dev.moguq.top/netease?id=2003734815&limit=50')
+        fetch('https://dev.moguq.top/netease?id=2003734815&limit=50&tls=1')
           .then(res => res.json())
           .then(data => {
             if (data.code === 200) {
