@@ -405,6 +405,7 @@
         const audioPlayer = ref();
         const lrcLines = ref([]);
         const timeOffset = ref(0);
+        const audioRetry = ref(0);
         const volume = ref(0.7);
         onMounted(() => {
           // 获取歌单信息
@@ -437,6 +438,19 @@
               quoteAuthor.value = data.from;
             });
 
+          audio.addEventListener('error', () => {
+            if (audioRetry.value < 3) {
+              audio.load();
+              audioRetry.value++;
+            } else {
+              nextSong();
+            }
+          });
+          
+          audio.addEventListener('canplay', () => {
+            audioRetry.value = 0;
+          });
+          
           const tick = () => {
             time.value = new Date().toLocaleTimeString();
             date.value = new Date().toLocaleDateString();
