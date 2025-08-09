@@ -326,8 +326,11 @@
             <audio v-if="currentSongUrl"
                    @timeupdate="onTimeUpdate"
                    @ended="nextSong"
+                   @error="handleAudioError"
+                   @canplay="handleCanPlay" 
                    :volume="volume"
-                   ref="audioPlayer">
+                   ref="audioPlayer"
+                   autoplay>
               <source :src="currentSongUrl" type="audio/mpeg">
               浏览器不支持
             </audio>
@@ -384,7 +387,7 @@
   </footer>
 
   <script>
-    const { createApp, ref, onMounted, onUnmounted } = Vue;
+    const { createApp, ref, onMounted, onUnmounted, watch } = Vue;
 
     createApp({
       setup() {
@@ -406,6 +409,7 @@
         const lrcLines = ref([]);
         const timeOffset = ref(0);
         const audioRetry = ref(0);
+        const audioAllRetry = ref(0);
         const volume = ref(0.7);
         onMounted(() => {
           // 获取歌单信息
@@ -437,19 +441,6 @@
               quoteText.value = data.hitokoto;
               quoteAuthor.value = data.from;
             });
-
-          audio.addEventListener('error', () => {
-            if (audioRetry.value < 3) {
-              audio.load();
-              audioRetry.value++;
-            } else {
-              nextSong();
-            }
-          });
-          
-          audio.addEventListener('canplay', () => {
-            audioRetry.value = 0;
-          });
           
           const tick = () => {
             time.value = new Date().toLocaleTimeString();
@@ -468,6 +459,34 @@
           window.removeEventListener('keydown', handleKeyDown)
           window.removeEventListener('keyup', handleKeyUp)
         })
+        
+        function handleAudioError() {
+          console.log('音频加载失败');
+          const audioEl = audioPlayer.value?.$el || audioPlayer.value;
+          console.log('音频加载失败', audioEl?.error);
+          if (!audioEl) return
+          if (audioRetry.value < 3) {
+            console.log('音频加载失败 重试第', audioRetry.value + 1, '次');
+            audioEl.load();
+            audioRetry.value++
+            audioAllRetry.value++
+          } else {
+            if (audioAllRetry.value >= songList.value.length * 3) {
+              console.log('已达到最大重试次数，停止播放');
+              lyrics.value = '<div style="color:#fff;"><strong>音频加载失败</strong></div><div style="color:#fff;"><strong>请稍后重试</strong></div>';
+              return;
+            }
+
+            console.log('已达到最大重试次数，播放下一曲');
+            audioRetry.value = 0;
+            nextSong();
+          }
+        }
+
+        function handleCanPlay() {
+            console.log('音频加载成功')
+            audioRetry.value = 0
+        }
 
         function handleKeyDown(e) {
           const audio = audioPlayer.value;
@@ -740,6 +759,8 @@
           volume,
           durationFormatted,
           currentTimeFormatted,
+          handleAudioError,
+          handleCanPlay,
           togglePlay,
           prevSong,
           nextSong,
