@@ -528,13 +528,14 @@
           }
           
           setTimeout(() => {
-            audio.play().then(() => {
+            try{  
+              audio.play();
               isPlaying.value = true;
-            }).catch(() => {
+            } catch(error) {
               lyrics.value = '<div style="color:#fff;"><strong>播放被浏览器阻止</strong></div><div style="color:#fff;"><strong>请手动点击开始播放</strong></div>';
               console.error('播放被浏览器阻止，请手动点击播放按钮');
-            });
-          }, 100);
+            }
+          }, 200);
         }
 
         function togglePlay() {
