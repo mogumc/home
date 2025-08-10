@@ -557,6 +557,7 @@
         }
 
         async function loadSongInfo(song, index) {
+          lyrics.value = '<div style="color:#fff;"><strong>歌曲加载中</strong></div>';
           currentSongIndex.value = index;
           currentTitle.value = song.title;
           currentArtist.value = song.author;
