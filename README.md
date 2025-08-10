@@ -36,7 +36,7 @@ Vue实现的单html文件个人主页
 <img width="622" height="161" alt="image" src="https://pic.moguq.top/images/250807-home02.png" />
 
 在``sites``字段与``socials``中按格式添加  
-name： 显示的文字 icon: 使用bootstrap-icons库,默认版本为1.8(如需使用新版本图标请修改cdn地址) url: 点击跳转的地址  
+name： 显示的文字 icon: 使用bootstrap-icons库,默认版本为1.13.1(如需使用新版本图标请修改cdn地址) url: 点击跳转的地址  
 ```
 { name: "博客", icon: 'bootstrap-fill', url: 'https://blog.moguq.top' },
 ```
