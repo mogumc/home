@@ -574,11 +574,12 @@
         async function loadSong(song, index) {
           await loadSongInfo(song, index);
           const audio = audioPlayer.value;
-          if(audio && currentSongUrl.value) {
-            audio.load();
-          } else {
+          if (!audio) {
             lyrics.value = '<div style="color:#fff;"><strong>歌曲加载失败</strong></div><div style="color:#fff;"><strong>请稍后再试</strong></div>';
-              console.log("歌曲加载失败,当前歌曲信息可能为空", error)
+            console.log("歌曲加载失败,当前歌曲信息可能为空", error);
+          }
+          if(song.url != audio.src) {
+            audio.src = song.url
           }
         }
 
