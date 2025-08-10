@@ -410,7 +410,7 @@
         const isPlaying = ref(false);
         const audioPlayer = ref();
         const lrcLines = ref([]);
-        const timeOffset = ref(0);
+        const timeOffset = ref(NaN);
         const audioRetry = ref(0);
         const audioAllRetry = ref(0);
         const volume = ref(0.7);
@@ -515,14 +515,12 @@
           const audio = audioPlayer.value;
           const duration = audio.duration
           if (isNaN(duration) || duration <= 0) return
-          const currentTime = audio.currentTime
-          if (isNaN(currentTime)) return
-          var step = (Math.max(timeOffset.value,currentTime) - Math.min(timeOffset.value,currentTime) + 20) * 0.03;
-          
+          const currentTime = audio.currentTime        
           switch (e.key) {
             case 'ArrowLeft':
               event.preventDefault()
-              if (timeOffset.value != 0 ){
+              if (!isNaN(timeOffset.value)){
+                step = (Math.max(timeOffset.value,currentTime) - Math.min(timeOffset.value,currentTime) + 20) * 0.03;
                 timeOffset.value = Math.max(0,timeOffset.value - step);
                 const displayPercent = (timeOffset.value / duration) * 100;
                 progress.value = displayPercent;
@@ -532,7 +530,8 @@
               break
             case 'ArrowRight':
               event.preventDefault()
-              if (timeOffset.value != 0 ){
+              if (!isNaN(timeOffset.value)) {
+                step = (Math.max(timeOffset.value,currentTime) - Math.min(timeOffset.value,currentTime) + 20) * 0.03;
                 timeOffset.value = Math.min(duration,timeOffset.value + step);
                 const displayPercent = (timeOffset.value / duration) * 100;
                 progress.value = displayPercent;
@@ -551,7 +550,7 @@
           const audio = audioPlayer.value;
           if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio) {
             audio.currentTime = timeOffset.value;
-            timeOffset.value = 0;
+            timeOffset.value = NaN;
           }
           return;
         }
@@ -579,7 +578,7 @@
             audio.load();
           } else {
             lyrics.value = '<div style="color:#fff;"><strong>歌曲加载失败</strong></div><div style="color:#fff;"><strong>请稍后再试</strong></div>';
-            console.log("歌曲加载失败,当前歌曲信息可能为空", error);
+              console.log("歌曲加载失败,当前歌曲信息可能为空", error)
           }
         }
 
@@ -620,7 +619,7 @@
           if (isNaN(duration) || duration <= 0) return;
           const currentTime = audio.currentTime;
           var currentDisplayTime = currentTime;
-          if (timeOffset.value != 0 ) {
+          if (!isNaN(timeOffset.value)) {
             currentDisplayTime = timeOffset.value;
           }
           const displayPercent = (currentDisplayTime / duration) * 100;
