@@ -461,7 +461,6 @@
         })
         
         function handleAudioError() {
-          console.log('音频加载失败');
           const audioEl = audioPlayer.value?.$el || audioPlayer.value;
           console.log('音频加载失败', audioEl?.error);
           if (!audioEl) return
