@@ -423,11 +423,11 @@
                 const songs = data.data || [];
                 console.log('Loaded songs:', songs);
                 songList.value = songs;
-                if (songs.length > 0) loadAndPlay(songs[0], 0);
+                if (songs.length > 0) loadSong(songs[0], 0);
               }
             })
-            .catch(() => {
-              console.error('歌单加载失败');
+            .catch((error) => {
+              console.error('歌单加载失败',error);
                 // 歌单加载失败，使用备用歌曲
                 songList.value = [{
                 title: "花がら",
@@ -435,7 +435,7 @@
                 url: "https://pic.moguq.top/files/hana.mp3",
                 lrc: "https://pic.moguq.top/files/hana.lrc"
               }];
-              loadAndPlay(songList.value[0], 0);
+              loadSong(songList.value[0], 0);
             });
 
           fetch('https://v1.hitokoto.cn/')
@@ -556,12 +556,11 @@
           return;
         }
 
-        function loadSong(song, index) {
+        async function loadSongInfo(song, index) {
           currentSongIndex.value = index;
           currentTitle.value = song.title;
           currentArtist.value = song.author;
           currentSongUrl.value = song.url;
-
           lrcLines.value = [];
           if (song.lrc) {
             fetch(song.lrc)
@@ -572,13 +571,16 @@
           }
         }
 
-        function loadAndPlay(song, index) {
-          loadSong(song, index);
+        async function loadSong(song, index) {
+          await loadSongInfo(song, index);
           const audio = audioPlayer.value;
-          try {
-            audio.src = song.url;
-          } catch (error) {
-            console.error('音频组件未加载完成');
+          if (audio.src !== song.url) {
+            try{
+              audio.src = song.url;
+            } catch (error) {
+              lyrics.value = '<div style="color:#fff;"><strong>歌曲列表为空</strong></div><div style="color:#fff;"><strong>请联系站点管理员</strong></div>';
+              console.log("异步加载失败,歌曲列表可能为空", error)
+            }
           }
         }
 
@@ -605,12 +607,12 @@
 
         function nextSong() {
           let nextIndex = (currentSongIndex.value + 1) % songList.value.length;
-          loadAndPlay(songList.value[nextIndex], nextIndex);
+          loadSong(songList.value[nextIndex], nextIndex);
         }
 
         function prevSong() {
           let prevIndex = (currentSongIndex.value - 1 + songList.value.length) % songList.value.length;
-          loadAndPlay(songList.value[prevIndex], prevIndex);
+          loadSong(songList.value[prevIndex], prevIndex);
         }
 
         function onTimeUpdate(e) {
