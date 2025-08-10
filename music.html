@@ -325,10 +325,12 @@
           <h3><i class="bi bi-music-note-beamed"></i> 音乐播放器</h3>
           <div class="custom-player">
             <audio v-if="currentSongUrl"
-                   @timeupdate="onTimeUpdate"
-                   @ended="nextSong"
-                   @error="handleAudioError"
+                   @timeupdate="onTimeUpdate" 
+                   @ended="nextSong" 
+                   @error="handleAudioError" 
                    @canplay="handleCanPlay" 
+                   @play="handleOnPlay" 
+                   @pause="handleOnPause" 
                    :volume="volume"
                    ref="audioPlayer"
                    autoplay>
@@ -476,7 +478,6 @@
               lyrics.value = '<div style="color:#fff;"><strong>音频加载失败</strong></div><div style="color:#fff;"><strong>请稍后重试</strong></div>';
               return;
             }
-
             console.log('已达到最大重试次数，播放下一曲');
             audioRetry.value = 0;
             nextSong();
@@ -485,7 +486,29 @@
 
         function handleCanPlay() {
             console.log('音频加载成功')
-            audioRetry.value = 0
+            audioRetry.value = 0;
+            const audio = audioPlayer.value;
+            if (!isPlaying.value){
+              audio.play().then(() => {
+                console.log('开始播放');
+              })
+              .catch((error) => {
+                lyrics.value = '<div style="color:#fff;"><strong>播放被浏览器阻止</strong></div><div style="color:#fff;"><strong>请手动点击开始播放</strong></div>';
+                console.error('播放被浏览器阻止，请手动点击播放按钮', error);
+              });
+            }
+        }
+
+        function handleOnPlay() {
+          console.log("播放成功");
+          const audio = audioPlayer.value;
+          audio.volume = volume.value;
+          isPlaying.value = true;
+        }
+
+        function handleOnPause() {
+          console.log("暂停中");
+          isPlaying.value = false;
         }
 
         function handleKeyDown(e) {
@@ -552,23 +575,11 @@
         function loadAndPlay(song, index) {
           loadSong(song, index);
           const audio = audioPlayer.value;
-          try{
+          try {
             audio.src = song.url;
-            audio.volume = volume.value;
           } catch (error) {
-            lyrics.value = '<div style="color:#fff;"><strong>播放被浏览器阻止</strong></div><div style="color:#fff;"><strong>请手动点击开始播放</strong></div>';
-            console.error('播放被浏览器阻止，请手动点击播放按钮');
+            console.error('音频组件未加载完成');
           }
-          
-          setTimeout(() => {
-            try{  
-              audio.play();
-              isPlaying.value = true;
-            } catch(error) {
-              lyrics.value = '<div style="color:#fff;"><strong>播放被浏览器阻止</strong></div><div style="color:#fff;"><strong>请手动点击开始播放</strong></div>';
-              console.error('播放被浏览器阻止，请手动点击播放按钮');
-            }
-          }, 200);
         }
 
         function togglePlay() {
@@ -576,9 +587,15 @@
           if (isPlaying.value) {
             audio.pause();
           } else {
-            audio.play();
+           audio.play().then(() => {
+              console.log('开始播放');
+            })
+            .catch((error) => {
+              lyrics.value = '<div style="color:#fff;"><strong>播放被浏览器阻止</strong></div><div style="color:#fff;"><strong>请手动点击开始播放</strong></div>';
+              console.error('播放被浏览器阻止，请手动点击播放按钮', error);
+            });
           }
-          isPlaying.value = !isPlaying.value;
+          
         }
 
         function changeVolume() {
@@ -761,6 +778,8 @@
           currentTimeFormatted,
           handleAudioError,
           handleCanPlay,
+          handleOnPlay,
+          handleOnPause,
           togglePlay,
           prevSong,
           nextSong,
