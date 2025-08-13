@@ -668,7 +668,7 @@
         }
 
         async function loadSong(song, index) {
-          await loadSongInfo(song, index);
+          await loadSongInfo(song, parseInt(index));
           const audio = audioPlayer.value;
           if (!audio) {
             lyrics.value = '<div style="color:#fff;"><strong>歌曲加载失败</strong></div><div style="color:#fff;"><strong>请稍后再试</strong></div>';
@@ -866,8 +866,13 @@
         }
 
         function handleLoadSong(){
-          console.log("尝试播放: ",songList.value[inputValue.value]);
-          loadSong(songList.value[inputValue.value], inputValue.value);
+          index = parseInt(inputValue.value);
+          if (isNaN(index) || index < 0 || index > songList.value.length){
+            console.log("输入地址超出限制 Range: 0 -",songList.value.length);
+            return;
+          }
+          console.log("尝试播放: ",songList.value[index]);
+          loadSong(songList.value[index], index);
         }
 
         function changeDevTools(){
