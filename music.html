@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="referrer" content="never">
   <title>MoGuQAQ - 音乐播放器</title>
 
   <!-- Vue CDN -->
@@ -260,6 +261,79 @@
       color: #7E7E7E
     }
 
+    .dev-box {
+      max-height: 80px;
+      min-height: 40px;
+      overflow: hidden;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      text-align: left;
+      line-height: 1.5;
+      color: #7e7e7e;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    #dev-box {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .dev-input {
+      flex: 1;
+      display: flex;
+      padding: 10px;
+      height: 30px;
+      max-width: 150px;
+      min-width: 100px; 
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      width: 250px;
+      transition: all 0.3s ease;
+      background-color: #fff;
+    }
+
+    .dev-input:focus {
+      border-color: #007BFF;
+      box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+    }
+
+    .dev-button {
+      width: 60px;
+      height: 30px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .dev-button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .dev-button:active {
+      transform: scale(0.98);
+    }
+
     @media (hover: hover) {
       .audio-panel:hover {
         color: #66ccff;
@@ -292,11 +366,17 @@
   <!-- 页面内容 -->
   <div id="app" class="container">
     <div class="left">
-      <div class="avatar">
+      <div class="avatar" @dblclick="changeDevTools">
         <img src="https://avatars.githubusercontent.com/u/67809394" alt="头像">
       </div>
       <div class="contact-info">
         <div class="lyric-box" v-html="lyrics"></div>
+      </div>
+      <div class="contact-info" v-if="isVisible">
+        <div id="dev-box">
+          <input class="dev-input" v-model="inputValue" placeholder="输入歌曲ID" />
+          <button class="dev-button" @click="handleLoadSong">提交</button>
+        </div>
       </div>
     </div>
 
@@ -413,9 +493,12 @@
         const audioRetry = ref(0);
         const audioAllRetry = ref(0);
         const volume = ref(0.7);
+        const isVisible = ref(false)
+        const inputValue = ref('')
+
         onMounted(() => {
           // 获取歌单信息
-          fetch('https://dev.moguq.top/netease?id=2003734815&limit=20&tls=1')
+           fetch('https://dev.moguq.top/netease?id=2003734815&limit=20&tls=1')
             .then(res => res.json())
             .then(data => {
               if (data.code === 200) {
@@ -463,12 +546,12 @@
         })
         
         function handleAudioError() {
-          const audioEl = audioPlayer.value?.$el || audioPlayer.value;
-          console.log('音频加载失败', audioEl?.error);
-          if (!audioEl) return
+          const audio = audioPlayer.value;
+          console.log('音频加载失败', audio?.error);
+          if (!audio) return
           if (audioRetry.value < 3) {
             console.log('音频加载失败 重试第', audioRetry.value + 1, '次');
-            audioEl.load();
+            audio.load();
             audioRetry.value++
             audioAllRetry.value++
           } else {
@@ -563,7 +646,7 @@
           if (song.url == "" || song.url == null) {
             lyrics.value = '<div style="color:#fff;"><strong>歌曲链接无效</strong></div>';
             console.log("歌曲链接无效,当前歌曲信息可能为空");
-            audioAllRetry.value+=3;
+            audioAllRetry.value += 2;
             if (audioAllRetry.value >= songList.value.length * 3) {
               console.log('已达到最大重试次数，停止播放');
               lyrics.value = '<div style="color:#fff;"><strong>音频加载失败</strong></div><div style="color:#fff;"><strong>请稍后重试</strong></div>';
@@ -590,6 +673,7 @@
           if (!audio) {
             lyrics.value = '<div style="color:#fff;"><strong>歌曲加载失败</strong></div><div style="color:#fff;"><strong>请稍后再试</strong></div>';
             console.log("歌曲加载失败,当前歌曲信息可能为空");
+             audioAllRetry.value++;
             if (audioAllRetry.value >= songList.value.length * 3) {
               console.log('已达到最大重试次数，停止播放');
               lyrics.value = '<div style="color:#fff;"><strong>音频加载失败</strong></div><div style="color:#fff;"><strong>请稍后重试</strong></div>';
@@ -602,7 +686,6 @@
             audio.src = song.url
           }
         }
-
 
         function togglePlay() {
           const audio = audioPlayer.value;
@@ -782,6 +865,14 @@
           lyrics.value = currentLyrics;
         }
 
+        function handleLoadSong(){
+          console.log("尝试播放: ",songList.value[inputValue.value]);
+          loadSong(songList.value[inputValue.value], inputValue.value);
+        }
+
+        function changeDevTools(){
+          isVisible.value = !isVisible.value;
+        }
 
         return {
           quoteText,
@@ -796,12 +887,16 @@
           isPlaying,
           audioPlayer,
           volume,
+          isVisible,
           durationFormatted,
           currentTimeFormatted,
           handleAudioError,
           handleCanPlay,
           handleOnPlay,
           handleOnPause,
+          handleLoadSong,
+          inputValue,
+          changeDevTools,
           togglePlay,
           prevSong,
           nextSong,
