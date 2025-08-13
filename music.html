@@ -498,7 +498,7 @@
 
         onMounted(() => {
           // 获取歌单信息
-           fetch('https://dev.moguq.top/netease?id=2003734815&limit=20&tls=1')
+           fetch('https://dev.moguq.top/netease?id=2003734815&limit=20&tls=1&jump=1')
             .then(res => res.json())
             .then(data => {
               if (data.code === 200) {
