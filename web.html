@@ -211,7 +211,14 @@
           { name: "博客", icon: 'bootstrap-fill', url: 'https://blog.moguq.top' },
         ];
 
-        const goto = (url) => window.open(url, '_blank');
+        const goto = (url) => {
+          const newTab = window.open(url, '_blank');
+          if (newTab) {
+            newTab.focus();
+          } else {
+            alert('跳转被浏览器拦截,请允许页面跳转');
+          }
+        };
 
         return {
           sites,
