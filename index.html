@@ -397,7 +397,14 @@
           { name: "GitHub", icon: 'github', url: 'https://github.com/mogumc' },
         ];
 
-        const goto = (url) => window.open(url, '_blank');
+        const goto = (url) => {
+          const newTab = window.open(url, '_blank');
+          if (newTab) {
+            newTab.focus();
+          } else {
+            alert('跳转被浏览器拦截,请允许页面跳转');
+          }
+        };
 
         // 获取一言
         Vue.onMounted(() => {
