@@ -43,7 +43,7 @@ name： 显示的文字 icon: 使用bootstrap-icons库,默认版本为1.13.1(如
 
 # 灵感来源
 [imsyy - home](https://github.com/imsyy/home)  
-由字节跳动提供js与css的CDN  
+由npmcn提供js与css的CDN  
 由次元API提供背景  
 由Hitokoto提供一言  
 
