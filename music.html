@@ -621,9 +621,19 @@
                 timeOffset.value = Math.min(duration, audio.currentTime + duration * 0.03);
               }
               break
+            case 'ArrowUp':
+              event.preventDefault()
+              volume.value = volume.value + 0.01 <= 1 ? volume.value + 0.01:1;
+              break  
+            case 'ArrowDown':
+              event.preventDefault()
+              volume.value = volume.value - 0.01 >= 0 ? volume.value - 0.01:0;
+              break  
             case ' ':
               togglePlay()
-              break
+              break  
+            default:
+              break  
           }
         }
 
@@ -633,6 +643,8 @@
           if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && audio) {
             audio.currentTime = timeOffset.value;
             timeOffset.value = NaN;
+          } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && audio) {
+            changeVolume();
           }
           return;
         }
