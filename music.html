@@ -623,11 +623,11 @@
               break
             case 'ArrowUp':
               event.preventDefault()
-              volume.value = volume.value + 0.01 <= 1 ? volume.value + 0.01:1;
+              volume.value = parseFloat(volume.value) + 0.01 <= 1 ? (parseFloat(volume.value) + 0.01).toFixed(2):1;
               break  
             case 'ArrowDown':
               event.preventDefault()
-              volume.value = volume.value - 0.01 >= 0 ? volume.value - 0.01:0;
+              volume.value = parseFloat(volume.value) - 0.01 >= 0 ? (parseFloat(volume.value) - 0.01).toFixed(2):0;
               break  
             case ' ':
               togglePlay()
