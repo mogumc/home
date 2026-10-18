@@ -1,0 +1,380 @@
+/* ==========================================================
+   全局样式 / 设计变量
+   改主题色、背景图、模糊度，基本只动 :root 里的变量
+   ========================================================== */
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 10px;
+  --radius: 12px;
+
+  --text: #eee;
+  --text-strong: #fff;
+  --text-dim: #bbb;
+  --text-muted: #7e7e7e;
+  --accent: #409eff;
+
+  /* 背景图（次元 API，每次请求随机） */
+  --site-bg: url('https://t.alcy.cc/ycy/');
+  --site-bg-mask: rgba(0, 0, 0, 0.6);
+
+  --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+  --footer-height: 72px;
+  /* 左栏（名片 / 歌词）固定宽度：内容再多再少都不改变框体尺寸 */
+  --left-width: 360px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font);
+  background: var(--site-bg) no-repeat center center fixed;
+  background-size: cover;
+  color: var(--text);
+}
+
+/* 压暗背景，保证文字对比度 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--site-bg-mask);
+  z-index: -1;
+  pointer-events: none;
+}
+
+#app {
+  flex: 1 0 auto;
+  display: flex;
+  width: 100%;
+  /* 顶部给悬浮导航、底部给固定页脚留位置，比原来塞占位 div 干净 */
+  padding: 3.5rem 0 var(--footer-height);
+}
+
+/* ---------- 毛玻璃卡片 ---------- */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* ---------- 通用布局 ---------- */
+.container {
+  /* margin:auto 居中：内容超过视口时不会被裁掉顶部 */
+  margin: auto;
+  width: 90%;
+  max-width: 1200px;
+  padding: 2rem;
+  display: flex;
+  /* 两栏各占一边，不参与换行判定：换行是按右栏内容宽度算的，
+     会出现「左栏 360、右栏被挤到下一行」的中间态。窄屏统一走媒体查询堆叠 */
+  flex-wrap: nowrap;
+  gap: 2rem;
+}
+
+.left {
+  /* 固定宽度：短文案不会把卡片缩窄，长文案也不会把整栏撑开 */
+  flex: 0 0 var(--left-width);
+  width: var(--left-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+}
+
+.right {
+  /* basis 用 0：拿剩余空间就行，别让内容宽度参与布局计算 */
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.top-modules {
+  display: flex;
+  gap: 1rem;
+}
+
+.module {
+  flex: 1;
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+}
+
+.module h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.17rem;
+}
+
+.page-header {
+  width: 100%;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-strong);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  padding: 1rem 0;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ---------- 头像 ---------- */
+.avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 3px solid var(--text-strong);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---------- 信息卡（名片 / 歌词框） ---------- */
+.contact-info {
+  width: 100%;
+  /* 不要被内容反向撑宽，宽窄由 .left 决定 */
+  min-width: 0;
+  padding: 1rem;
+}
+
+/* ---------- 站点入口 ---------- */
+.sites-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.site-block {
+  min-width: 140px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-size: 2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s ease, transform 0.2s ease;
+  user-select: none;
+}
+
+.site-block:hover,
+.site-block:focus-visible {
+  background: var(--glass-bg-hover);
+  outline: none;
+}
+
+.site-block:active {
+  transform: scale(0.98);
+}
+
+.site-title {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: left;
+}
+
+/* ---------- 社交入口 ---------- */
+.socials-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.social-block {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s ease;
+}
+
+.social-block:hover {
+  background: var(--glass-bg-hover);
+}
+
+.social-block i {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.social-block:hover i {
+  transform: scale(1.1);
+}
+
+/* 悬停才出现的名字标签 */
+.social-title {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.social-block:hover .social-title,
+.social-block:focus-visible .social-title {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+/* ---------- 固定毛玻璃页脚 ---------- */
+.fixed-blur-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  padding: 1rem;
+  text-align: center;
+  background: var(--glass-bg);
+  border-top: 1px solid var(--glass-border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.fixed-blur-footer a {
+  color: var(--text-strong);
+  text-decoration: none;
+  margin-left: 5px;
+  transition: color 0.2s ease;
+}
+
+.fixed-blur-footer a:hover {
+  color: var(--accent);
+}
+
+/* ---------- 载入动画 ---------- */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  color: var(--text-strong);
+  font-size: 2rem;
+  font-weight: bold;
+  transition: opacity 0.4s ease;
+}
+
+.loading-screen.is-fading {
+  opacity: 0;
+}
+
+/* ---------- 响应式 ---------- */
+/* 窄屏（平板竖屏、小窗）直接上下堆叠，两栏挤在一起太难看 */
+@media (max-width: 1024px) {
+  .container {
+    flex-direction: column;
+    width: 100%;
+    padding: 1rem 0.75rem 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .left {
+    /* 列方向下 flex-basis 是高度，这里必须还原成 auto */
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .right {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sites-container {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .sites-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .site-block {
+    font-size: 1.5rem;
+  }
+
+  .page-header {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .top-modules {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .module {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    /* 无限动画要连次数一起停掉，否则会变成疯狂旋转 */
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

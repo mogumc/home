@@ -1,0 +1,201 @@
+{
+  "site": {
+    "name": "MoGuQAQ",
+    "url": "https://www.moguq.top",
+    "description": "MoGuQAQ - 个人主页, 开源, 开源主页",
+    "keywords": "HTML,个人主页,免费,开源,开源主页,静态,液态玻璃",
+    "lang": "zh-CN",
+    "footerSince": 2026,
+    "footerLink": "https://www.moguq.top"
+  },
+
+  "background": {
+    "images": [
+      "https://t.alcy.cc/ycy/"
+    ],
+    "mask": 0.6
+  },
+
+  "profile": {
+    "avatar": "https://pic.moguq.top/images/avatar.67809394.webp",
+    "greeting": "Hi!👋 I am",
+    "name": "MoGuQAQ",
+    "subtitle": "Full Stack Developer",
+    "highlights": [
+      { "icon": "code", "text": "Code" },
+      { "icon": "music-note-beamed", "text": "Rhythm Games" }
+    ],
+    "skillsImage": "https://pic.moguq.top/actions/profile.icon.skill.svg",
+    "lines": []
+  },
+
+  "socials": [
+    { "name": "GitHub", "icon": "github", "url": "https://github.com/mogumc" },
+    { "name": "Telegram", "icon": "telegram", "url": "https://t.me/moguqaq" },
+    { "name": "Steam", "icon": "steam", "url": "https://steamcommunity.com/id/mogumc" },
+    { "name": "OSU!", "icon": "circle", "url": "https://osu.ppy.sh/users/15073827" },
+    { "name": "邮箱", "icon": "envelope-paper-fill", "url": "mailto:mogumc@outlook.com" }
+  ],
+
+  "homeSites": [
+    { "name": "博客", "icon": "bootstrap-fill", "url": "https://blog.moguq.top" },
+    { "name": "项目集", "icon": "app-indicator", "url": "https://space.moguq.top" },
+    { "name": "TG群", "icon": "chat-dots-fill", "url": "https://t.me/tg_tx" },
+    { "name": "网盘", "icon": "cloud-fill", "url": "https://my.moguq.top" },
+    { "name": "爱发电", "icon": "plugin", "url": "https://afdian.com/a/moguqaq" },
+    { "name": "音乐", "icon": "music-player-fill", "url": "/music" },
+    { "name": "更多站点", "icon": "send-fill", "url": "/web" }
+  ],
+
+  "webSites": [
+    {
+      "name": "博客",
+      "icon": "bootstrap-fill",
+      "desc": "折腾记录与日常",
+      "category": "站点",
+      "url": "https://blog.moguq.top"
+    },
+    {
+      "name": "项目集",
+      "icon": "app-indicator",
+      "desc": "写过的开源项目",
+      "category": "站点",
+      "url": "https://space.moguq.top"
+    },
+    {
+      "name": "主页",
+      "icon": "house-door-fill",
+      "desc": "回到首页",
+      "category": "站点",
+      "url": "https://www.moguq.top"
+    },
+    {
+      "name": "音乐",
+      "icon": "music-player-fill",
+      "desc": "站内播放器",
+      "category": "站点",
+      "url": "/music"
+    },
+    {
+      "name": "TG群",
+      "icon": "chat-dots-fill",
+      "desc": "来群里聊两句",
+      "category": "社交",
+      "url": "https://t.me/tg_tx"
+    },
+    {
+      "name": "Telegram",
+      "icon": "telegram",
+      "desc": "私聊找我",
+      "category": "社交",
+      "url": "https://t.me/moguqaq"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "desc": "代码都在这儿",
+      "category": "社交",
+      "url": "https://github.com/mogumc"
+    },
+    {
+      "name": "Steam",
+      "icon": "steam",
+      "desc": "游戏时间",
+      "category": "社交",
+      "url": "https://steamcommunity.com/id/mogumc"
+    },
+    {
+      "name": "OSU!",
+      "icon": "circle",
+      "desc": "打歌记录",
+      "category": "社交",
+      "url": "https://osu.ppy.sh/users/15073827"
+    },
+    {
+      "name": "RhythmChina",
+      "icon": "vinyl",
+      "desc": "音游战队",
+      "category": "社交",
+      "url": "https://osu.ppy.sh/teams/24063"
+    },
+    {
+      "name": "网盘",
+      "icon": "cloud-fill",
+      "desc": "私有云盘",
+      "category": "服务",
+      "url": "https://my.moguq.top"
+    },
+    {
+      "name": "网易云",
+      "icon": "boombox-fill",
+      "desc": "歌单收藏",
+      "category": "服务",
+      "url": "https://music.163.com/#/playlist?id=2003734815"
+    },
+    {
+      "name": "爱发电",
+      "icon": "plugin",
+      "desc": "请我喝杯咖啡",
+      "category": "服务",
+      "url": "https://afdian.com/a/moguqaq"
+    },
+    {
+      "name": "服务状态",
+      "icon": "award-fill",
+      "desc": "站点可用性监控",
+      "category": "服务",
+      "url": "https://stats.uptimerobot.com/2nADBmLJRO"
+    },
+    {
+      "name": "MGL Docs",
+      "icon": "award-fill",
+      "desc": "启动器文档",
+      "category": "服务",
+      "url": "https://launcher.baidup.top"
+    },
+    {
+      "name": "MGAI",
+      "icon": "award-fill",
+      "desc": "AI 服务",
+      "category": "服务",
+      "url": "https://ai.baidup.top"
+    },
+    {
+      "name": "Komari",
+      "icon": "award-fill",
+      "desc": "服务器探针",
+      "category": "服务",
+      "url": "https://run.moguq.top"
+    }
+  ],
+
+  "modules": {
+    "hitokoto": true,
+    "clock": true,
+    "rss": {
+      "enabled": true,
+      "url": "https://blog.moguq.top/rss.xml",
+      "limit": 4
+    },
+    "customHtml": {
+      "enabled": false,
+      "html": ""
+    }
+  },
+
+  "nav": {
+    "enabled": true
+  },
+
+  "music": {
+    "api": "https://dev.moguq.top/netease?id=2003734815&limit=300&tls=1&jump=1",
+    "fallback": [
+      {
+        "title": "花がら",
+        "author": "tayori",
+        "url": "https://pic.moguq.top/files/hana.mp3",
+        "lrc": "https://pic.moguq.top/files/hana.lrc"
+      }
+    ]
+  }
+}
