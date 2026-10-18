@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import rawConfig from '../../home.config.json'
 import { defaultConfig } from './defaults'
 
@@ -122,20 +123,73 @@ export const config = {
   },
 }
 
+const BG_CACHE_KEY = 'home:bg'
+
+/**
+ * 当前背景图地址。用 ref 交给 App.vue 渲染成固定的 <img> 图层，
+ * 不走 CSS background：路由切换时这层不会被重建，也就不会重新请求。
+ */
+export const backgroundUrl = ref('')
+
+/** 看起来就是一张图，不用再去解析跳转 */
+function isDirectImage(url) {
+  return /\.(?:jpe?g|png|webp|avif|gif|svg)(?:[?#].*)?$/i.test(url)
+}
+
+function readCachedBackground(images) {
+  try {
+    const raw = sessionStorage.getItem(BG_CACHE_KEY)
+    if (!raw) return ''
+    const entry = JSON.parse(raw)
+    // 配置换过图就作废，避免一直用旧的
+    if (!entry?.resolved || !images.includes(entry.source)) return ''
+    return entry.resolved
+  } catch {
+    return ''
+  }
+}
+
+function writeCachedBackground(source, resolved) {
+  try {
+    sessionStorage.setItem(BG_CACHE_KEY, JSON.stringify({ source, resolved }))
+  } catch {
+    // 隐私模式下 sessionStorage 可能不可用，忽略
+  }
+}
+
+/**
+ * 背景图。
+ *
+ * 随机图接口（如次元 API）每次请求都 302 到不同的图，而且跳转响应没有缓存头，
+ * 所以只要换一次请求就会换图。策略：
+ * - 配置里是固定图片地址 → 同一会话内复用同一张；
+ * - 是随机接口 → 每次加载取一张，进了页面就不再请求（图层只建一次）。
+ */
+export function initBackground() {
+  const { images } = config.background
+  if (!images.length) return
+
+  const cached = readCachedBackground(images)
+  if (cached) {
+    backgroundUrl.value = cached
+    return
+  }
+
+  const source = images[Math.floor(Math.random() * images.length)]
+  backgroundUrl.value = source
+
+  // 只有固定图片值得记下来，随机接口记了也没意义
+  if (isDirectImage(source)) writeCachedBackground(source, source)
+}
+
 /**
  * 把外观类配置刷到 CSS 变量上，main.js 挂载前调用，避免闪一下默认样式
  */
 export function applyAppearance() {
   const root = document.documentElement
-  const { images, mask } = config.background
-
-  if (images.length) {
-    const pick = images[Math.floor(Math.random() * images.length)].replace(/^["']|["']$/g, '')
-    root.style.setProperty('--site-bg', `url("${pick}")`)
-  } else {
-    root.style.setProperty('--site-bg', 'none')
-  }
-
-  root.style.setProperty('--site-bg-mask', `rgba(0, 0, 0, ${mask})`)
+  root.style.setProperty('--site-bg-mask', `rgba(0, 0, 0, ${config.background.mask})`)
   root.lang = config.site.lang
+
+  const cached = readCachedBackground(config.background.images)
+  if (cached) backgroundUrl.value = cached
 }

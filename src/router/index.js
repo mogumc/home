@@ -2,11 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { config } from '../config'
 import { PAGES } from './pages'
 import ErrorView from '../views/ErrorView.vue'
+import HomeView from '../views/HomeView.vue'
+import WebView from '../views/WebView.vue'
+import MusicView from '../views/MusicView.vue'
 
+// 页面就三个，直接同步引入：切路由不用等 chunk，过渡才不会中间空一屏
 const views = {
-  home: () => import('../views/HomeView.vue'),
-  web: () => import('../views/WebView.vue'),
-  music: () => import('../views/MusicView.vue'),
+  home: HomeView,
+  web: WebView,
+  music: MusicView,
 }
 
 const pageRoutes = PAGES.map((page) => ({

@@ -91,7 +91,7 @@ legacy/                    # 重构前的单文件版本，留作对照，可删
 | `site.url` | 站点地址，**生成 sitemap 必需**，不填则跳过 |
 | `site.description` / `site.keywords` | SEO 描述与关键词 |
 | `site.footerSince` / `site.footerLink` | 页脚起始年份与作者链接 |
-| `background.images` | 背景图，字符串或数组（多张每次刷新随机） |
+| `background.images` | 背景图，字符串或数组（多张每次加载随机取一张） |
 | `background.mask` | 黑色遮罩透明度 0~1 |
 | `profile.avatar` | 头像 URL |
 | `profile.greeting` / `profile.name` | 「Hi!👋 I am」+ 主题色高亮的名字 |
@@ -106,6 +106,9 @@ legacy/                    # 重构前的单文件版本，留作对照，可删
 | `modules.customHtml` | `{ enabled, html }` |
 | `nav.enabled` | 顶部悬浮导航开关 |
 | `music.api` / `music.fallback` | 歌单接口与兜底曲目 |
+
+**背景图说明**：配置成固定图片地址（`.jpg/.webp/...`）时，同一会话内复用同一张；配置成随机图接口（如次元 API，每次 302 到不同图片）时，每次打开页面取一张，进入站内后切页面不会再变。
+想让背景永远固定，就把 `images` 换成一个具体图片地址。
 
 **站内链接**直接写 `/music`、`/web`，会自动补上部署子路径；`https://`、`mailto:` 原样使用。
 

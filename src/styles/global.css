@@ -16,8 +16,7 @@
   --text-muted: #7e7e7e;
   --accent: #409eff;
 
-  /* 背景图（次元 API，每次请求随机） */
-  --site-bg: url('https://t.alcy.cc/ycy/');
+  /* 背景遮罩，具体图片由 App.vue 的 .bg-layer 渲染 */
   --site-bg-mask: rgba(0, 0, 0, 0.6);
 
   --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
@@ -37,6 +36,8 @@ html {
   min-height: 100%;
   margin: 0;
   padding: 0;
+  /* 始终预留滚动条位置：切页面时视口宽度不变，背景 cover 不会跟着重算 */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -46,9 +47,30 @@ body {
   display: flex;
   flex-direction: column;
   font-family: var(--font);
-  background: var(--site-bg) no-repeat center center fixed;
-  background-size: cover;
+  background-color: #111;
   color: var(--text);
+}
+
+/* 背景图层：固定在视口，路由切换不重建 */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background-color: #111;
+}
+
+.bg-layer img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.bg-layer img.is-ready {
+  opacity: 1;
 }
 
 /* 压暗背景，保证文字对比度 */
@@ -293,6 +315,28 @@ body::before {
 
 .fixed-blur-footer a:hover {
   color: var(--accent);
+}
+
+/* ---------- 页面切换过渡 ---------- */
+/* 新旧两页重叠淡入淡出：旧页脱离文档流快速消失，新页同时淡入，中间不会空一屏 */
+.page-leave-active {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transition: opacity 0.15s ease;
+}
+
+.page-enter-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-leave-to {
+  opacity: 0;
 }
 
 /* ---------- 载入动画 ---------- */
