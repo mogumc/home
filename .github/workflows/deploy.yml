@@ -27,19 +27,44 @@ jobs:
 
       - run: npm ci
 
-      # 项目页要部署到 /<repo>/，用户页或自定义域名用 /。
-      # 也可以在仓库 Variables 里设置 VITE_BASE 手动覆盖。
+      # 决定资源前缀 base：
+      #   1. 仓库 Variables 里设置了 VITE_BASE → 用它
+      #   2. public/CNAME 存在，或 Pages 配了自定义域名 → '/'（域名根目录）
+      #   3. 否则是项目页 → '/<repo>/'
       - name: Resolve base path
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
           if [ -n "${{ vars.VITE_BASE }}" ]; then
-            echo "VITE_BASE=${{ vars.VITE_BASE }}" >> "$GITHUB_ENV"
+            BASE="${{ vars.VITE_BASE }}"
+            echo "使用仓库变量 VITE_BASE=$BASE"
           elif [ -f public/CNAME ] || [ -f CNAME ]; then
-            echo "VITE_BASE=/" >> "$GITHUB_ENV"
+            BASE="/"
+            echo "检测到 CNAME，按自定义域名根路径构建"
           else
-            echo "VITE_BASE=/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_ENV"
+            CNAME="$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.cname // ""' 2>/dev/null || true)"
+            if [ -n "$CNAME" ]; then
+              BASE="/"
+              echo "Pages 已绑定自定义域名 ${CNAME}，按根路径构建"
+            else
+              BASE="/${REPO_NAME}/"
+              echo "未检测到自定义域名，按项目页 /${REPO_NAME}/ 构建"
+            fi
           fi
+          echo "VITE_BASE=$BASE" >> "$GITHUB_ENV"
 
       - run: npm run build
+
+      # 兜底自检：产物里的资源路径必须和 base 一致，别再静默发一个全 404 的站点
+      - name: Verify asset base
+        run: |
+          if ! grep -q "src=\"${VITE_BASE}assets/" dist/index.html; then
+            echo "::error::dist/index.html 的资源路径与 VITE_BASE=${VITE_BASE} 不一致"
+            grep -o 'src="[^"]*"' dist/index.html | head -5
+            exit 1
+          fi
+          echo "资源路径校验通过：${VITE_BASE}assets/"
 
       - uses: actions/configure-pages@v5
 

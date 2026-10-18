@@ -134,13 +134,25 @@ legacy/                    # 重构前的单文件版本，留作对照，可删
 
 **先在仓库 Settings → Pages 里把 Source 选成「GitHub Actions」。**
 
-`base` 路径会自动判断：
+`base`（资源前缀）由工作流按顺序判断：
 
-- 项目页 `https://<user>.github.io/<repo>/` → `/repo/`
-- 用户页或自定义域名（仓库里有 `CNAME`）→ `/`
-- 手动指定：仓库 Variables 里加 `VITE_BASE`，例如 `/home/`
+1. 仓库 Variables 里的 `VITE_BASE`（最高优先级）
+2. 存在 `public/CNAME`，或 Pages 已绑定自定义域名 → `/`
+3. 其他情况按项目页 → `/<repo>/`
 
-本地复现项目页构建：`VITE_BASE=/home/ npm run build`。
+`public/CNAME` 里写的是 `www.moguq.top`，所以本站按域名根路径 `/` 构建。
+**换成自己的域名时改这个文件**；用项目页就把它删掉，工作流会自动走 `/<repo>/`。
+
+构建后还会校验 `dist/index.html` 里的资源前缀是否和 `VITE_BASE` 一致，不一致直接让构建失败，避免再发一个资源全 404 的站点。
+
+本地手动构建：
+
+```bash
+npm run build                    # base 默认 '/'
+VITE_BASE=/home/ npm run build   # 项目页
+```
+
+> Windows 的 Git Bash 会把 `VITE_BASE=/` 当成路径转成 Git 安装目录，手动构建时加 `MSYS_NO_PATHCONV=1`，或改用 Windows 自带的终端。
 
 ### sitemap
 
