@@ -11,6 +11,7 @@ const {
   artist,
   cover,
   src,
+  loadKey,
   lyricView,
   notice,
   isPlaying,
@@ -27,6 +28,7 @@ const {
   handleCanPlay,
   handlePlay,
   handlePause,
+  handleEnded,
   handleTimeUpdate,
   handleAudioError,
   toggleDevTools,
@@ -88,12 +90,20 @@ const {
           <h3><i class="bi bi-music-note-beamed" aria-hidden="true"></i> 音乐播放器</h3>
 
           <div class="custom-player">
+            <!--
+              每次换歌重建元素（key 变化）+ autoplay：
+              元素一旦停在 ended / error 状态，改 src 未必拉得回来，
+              新建一个干净的、带 autoplay 的元素最稳。
+            -->
             <audio
+              v-if="src"
+              :key="loadKey"
               ref="audioRef"
-              :src="src || undefined"
+              :src="src"
               preload="auto"
+              autoplay
               @timeupdate="handleTimeUpdate"
-              @ended="next"
+              @ended="handleEnded"
               @error="handleAudioError"
               @canplay="handleCanPlay"
               @play="handlePlay"
@@ -265,29 +275,30 @@ const {
   align-items: center;
   justify-content: center;
   gap: 15px;
+  font-size: 1.5rem;
 }
 
 .audio-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  padding: 0;
-  border: 1px solid var(--glass-border);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #444;
+  color: #fff;
   font-size: 1.2rem;
+  line-height: 1;
   cursor: pointer;
-  transition: color 0.2s ease, background 0.2s ease;
 }
 
-.audio-panel:hover,
-.audio-panel:focus-visible {
-  color: #66ccff;
-  background: rgba(255, 255, 255, 0.12);
-  outline: none;
+@media (hover: hover) {
+  .audio-panel:hover {
+    color: #66ccff;
+  }
+}
+
+@media (hover: none) {
+  .audio-panel:active {
+    color: #66ccff;
+  }
 }
 
 .audio-progress-container {
@@ -319,7 +330,8 @@ const {
 }
 
 .audio-time {
-  margin-top: 4px;
+  margin-top: 8px;
+  text-align: center;
   font-size: 14px;
   color: #ccc;
   font-variant-numeric: tabular-nums;
