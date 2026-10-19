@@ -60,6 +60,13 @@
 
   "webSites": [
     {
+      "name": "我的主页",
+      "icon": "house-door-fill",
+      "desc": "点了只会回到首页",
+      "category": "站点",
+      "url": "https://www.moguq.top"
+    },
+    {
       "name": "博客",
       "icon": "bootstrap-fill",
       "desc": "折腾记录与日常",
@@ -72,13 +79,6 @@
       "desc": "写过的开源项目",
       "category": "站点",
       "url": "https://space.moguq.top"
-    },
-    {
-      "name": "主页",
-      "icon": "house-door-fill",
-      "desc": "回到首页",
-      "category": "站点",
-      "url": "https://www.moguq.top"
     },
     {
       "name": "音乐",
@@ -97,28 +97,35 @@
     {
       "name": "Telegram",
       "icon": "telegram",
-      "desc": "私聊找我",
+      "desc": "最快找到我的地方",
       "category": "社交",
       "url": "https://t.me/moguqaq"
     },
     {
       "name": "GitHub",
       "icon": "github",
-      "desc": "代码都在这儿",
+      "desc": "开源点奇奇怪怪的东西",
       "category": "社交",
       "url": "https://github.com/mogumc"
     },
     {
+      "name": "CNB",
+      "icon": "git",
+      "desc": "开源点奇奇怪怪的东西",
+      "category": "社交",
+      "url": "https://cnb.cool/MoGuQAQ"
+    },
+    {
       "name": "Steam",
       "icon": "steam",
-      "desc": "游戏时间",
+      "desc": "加好友的话要提前和我说",
       "category": "社交",
       "url": "https://steamcommunity.com/id/mogumc"
     },
     {
       "name": "OSU!",
       "icon": "circle",
-      "desc": "打歌记录",
+      "desc": "全世界最好玩的游戏",
       "category": "社交",
       "url": "https://osu.ppy.sh/users/15073827"
     },
@@ -132,14 +139,14 @@
     {
       "name": "网盘",
       "icon": "cloud-fill",
-      "desc": "私有云盘",
+      "desc": "也许能翻出一些东西",
       "category": "服务",
       "url": "https://my.moguq.top"
     },
     {
       "name": "网易云",
       "icon": "boombox-fill",
-      "desc": "歌单收藏",
+      "desc": "本站使用的歌单",
       "category": "服务",
       "url": "https://music.163.com/#/playlist?id=2003734815"
     },
@@ -169,7 +176,7 @@
       "icon": "award-fill",
       "desc": "AI 服务",
       "category": "服务",
-      "url": "https://ai.baidup.top"
+      "url": "https://ai.moguq.top"
     },
     {
       "name": "Komari",
