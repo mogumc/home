@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { config } from '../config'
+import { toCover } from '../composables/useCover'
 import { PAGES } from './pages'
 import ErrorView from '../views/ErrorView.vue'
 import HomeView from '../views/HomeView.vue'
@@ -51,7 +52,19 @@ const errorRoutes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [...pageRoutes, ...errorRoutes],
-  scrollBehavior: () => ({ top: 0 }),
+  // 滚动由 useCover 接管（首屏 ↔ 内容区的交接动画），路由器别插手
+  scrollBehavior: () => false,
+})
+
+/**
+ * 切页前先回到首屏：内容滑下去露出名字屏，新页面在幕后换好，
+ * 再由 App 把内容拉下来。所以这里只负责「上滑」这一段。
+ */
+router.beforeEach(async (to, from) => {
+  // 首次进入站点、或者点的就是当前页，不需要退场
+  if (!from.name || to.path === from.path) return true
+  await toCover()
+  return true
 })
 
 function setCanonical(path) {

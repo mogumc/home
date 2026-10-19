@@ -1,4 +1,4 @@
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { config } from '../config'
 import { clamp, formatTime } from '../utils/format'
 import { buildLyricView, parseLrc } from '../utils/lrc'
@@ -33,8 +33,11 @@ function normalizeSong(song = {}) {
  * 元素一旦停在 ended / error / 断流状态，改 src 未必能拉回来，
  * 新建一个带 autoplay 的元素则一定是干净状态，播不播交给浏览器，
  * 不依赖 isPlaying 这个可能和元素真实状态对不上的影子值。
+ *
+ * 这里是单例：状态和元素都不挂在页面组件上，<audio> 住在 App 里的
+ * <PlayerAudio>，所以切到别的页面音乐不会断。
  */
-export function usePlayer() {
+function createPlayer() {
   const audioRef = ref(null)
 
   const songs = ref([])
@@ -45,9 +48,15 @@ export function usePlayer() {
   const src = ref('')
   /** 换源计数，模板当 key 用，保证每次换歌都是新元素 */
   const loadKey = ref(0)
+  /** 新元素要不要带 autoplay：进站默认不播，等用户自己点 */
+  const shouldAutoplay = ref(false)
   const lyricLines = ref([])
+  /** 一屏能放几句歌词：音乐页量完面板高度后写进来，别写死 */
+  const lyricWindow = ref(3)
 
   const isPlaying = ref(false)
+  /** 用户是否主动播过：没播过就别在别的页面挂一条 mini 播放器 */
+  const hasPlayed = ref(false)
   const currentTime = ref(0)
   const duration = ref(0)
   /** 拖动/方向键预览时的临时进度，null 表示跟随真实播放 */
@@ -58,6 +67,8 @@ export function usePlayer() {
   const devVisible = ref(false)
   const devInput = ref('')
   const playlistLoading = ref(true)
+  /** 键盘快捷键只在音乐页生效：别在别的页面抢空格和方向键 */
+  const shortcutsOn = ref(false)
 
   /** 用户是否希望播放（跨越切歌保留） */
   let wantPlay = false
@@ -82,7 +93,22 @@ export function usePlayer() {
   /** 待生效的换源（防抖用） */
   let pendingSource = null
 
-  const lyricView = computed(() => buildLyricView(lyricLines.value, currentTime.value))
+  const lyricView = computed(() =>
+    buildLyricView(lyricLines.value, currentTime.value, lyricWindow.value),
+  )
+
+  /**
+   * 当前正在唱的那一句，只取第一行（原文）。
+   * 同一时间戳往往还有一行翻译，mini 播放器只有一行位置，放原文更合适。
+   */
+  const currentLyric = computed(() => lyricView.value.find((line) => line.active)?.text || '')
+
+  /** 面板变高变矮时重算能放几句；取奇数，当前行才是正中间 */
+  function setLyricWindow(count) {
+    const next = Math.max(3, Math.min(15, Math.round(count) || 3))
+    const odd = next % 2 === 0 ? next - 1 : next
+    if (odd !== lyricWindow.value) lyricWindow.value = odd
+  }
   const percent = computed(() => {
     if (!duration.value) return 0
     const base = seekPreview.value ?? currentTime.value
@@ -104,9 +130,11 @@ export function usePlayer() {
     return audioRef.value
   }
 
-  /** 换源：改 key 让 Vue 重建元素，剩下的交给 autoplay */
+  /** 换源：改 key 让 Vue 重建元素，播不播由 wantPlay 决定 */
   function setSource(url) {
     src.value = url
+    // 只有「用户想听」时新元素才带 autoplay，否则只加载元数据
+    shouldAutoplay.value = wantPlay
     loadKey.value += 1
     const seq = ++loadSeq
 
@@ -155,6 +183,7 @@ export function usePlayer() {
 
     wantPlay = true
     stallFrom = 0
+    hasPlayed.value = true
 
     const result = el.play()
     if (!result || typeof result.then !== 'function') return
@@ -289,7 +318,8 @@ export function usePlayer() {
         return
       }
       if (!active) return
-      loadIndex(0, true)
+      // 进站先摆好第一首，但不自动播：播放要用户自己点
+      loadIndex(0, false)
     } finally {
       playlistLoading.value = false
     }
@@ -358,6 +388,13 @@ export function usePlayer() {
   }
 
   /* ---------- <audio> 事件 ---------- */
+  /** 元数据到手就有总时长了：没播放时也能显示 04:38，而不是 00:00 */
+  function handleMetadata(event) {
+    const el = event?.target || currentEl()
+    if (!el) return
+    if (Number.isFinite(el.duration) && el.duration > 0) duration.value = el.duration
+  }
+
   function handleCanPlay() {
     const el = currentEl()
     if (!el) return
@@ -366,7 +403,9 @@ export function usePlayer() {
     if (wantPlay && el.paused) play()
   }
 
-  function handlePlay() {
+  function handlePlay(event) {
+    // 换歌时旧元素被替换，它的暂停事件可能比新元素的 play 晚到
+    if (event?.target && event.target !== currentEl()) return
     notice.value = ''
     isPlaying.value = true
     stallFrom = 0
@@ -374,7 +413,8 @@ export function usePlayer() {
     if (el) el.volume = clamp(Number(volume.value) || 0, 0, 1)
   }
 
-  function handlePause() {
+  function handlePause(event) {
+    if (event?.target && event.target !== currentEl()) return
     isPlaying.value = false
   }
 
@@ -428,6 +468,8 @@ export function usePlayer() {
     if (moving) {
       stallFrom = 0
       consecutiveFail = 0
+      // 元素才是真相：进度在走就把图标掰回「播放中」，别让影子状态骗人
+      isPlaying.value = true
       return
     }
 
@@ -480,6 +522,8 @@ export function usePlayer() {
   }
 
   function handleKeydown(event) {
+    // 首屏的空格/方向键归滚动管（App 会先 preventDefault），别抢
+    if (!shortcutsOn.value || event.defaultPrevented) return
     const el = currentEl()
     if (!el || isTyping(event.target)) return
 
@@ -530,6 +574,15 @@ export function usePlayer() {
     devVisible.value = !devVisible.value
   }
 
+  /** 播放列表点选：点当前这首就当播放/暂停用，别从头再来 */
+  function playIndex(index) {
+    if (index === currentIndex.value && src.value) {
+      toggle()
+      return
+    }
+    loadIndex(index, true)
+  }
+
   function playByIndex() {
     const index = Number.parseInt(devInput.value, 10)
     if (!Number.isInteger(index) || index < 0 || index >= songs.value.length) {
@@ -540,6 +593,8 @@ export function usePlayer() {
   }
 
   function start() {
+    // 单例：<PlayerAudio> 只会挂一次，重复调用直接忽略
+    if (active) return
     active = true
     window.addEventListener('keydown', handleKeydown)
     window.addEventListener('keyup', handleKeyup)
@@ -567,20 +622,21 @@ export function usePlayer() {
     src.value = ''
   }
 
-  onMounted(start)
-  onUnmounted(stop)
-
   return {
     audioRef,
     songs,
+    currentIndex,
     title,
     artist,
     cover,
     src,
     loadKey,
+    shouldAutoplay,
     lyricView,
+    currentLyric,
     notice,
     isPlaying,
+    hasPlayed,
     percent,
     currentText,
     durationText,
@@ -588,11 +644,17 @@ export function usePlayer() {
     devVisible,
     devInput,
     playlistLoading,
+    shortcutsOn,
+    setLyricWindow,
     next,
     prev,
     toggle,
     seek,
+    playIndex,
+    start,
+    stop,
     handleCanPlay,
+    handleMetadata,
     handlePlay,
     handlePause,
     handleEnded,
@@ -601,4 +663,20 @@ export function usePlayer() {
     toggleDevTools,
     playByIndex,
   }
+}
+
+/** 全局只有这一份状态；页面切走时它和 <audio> 都还在 */
+const player = createPlayer()
+
+export function usePlayer() {
+  return player
+}
+
+/** 由 <PlayerAudio> 调用：整个应用生命周期内只跑一次 */
+export function startPlayer() {
+  player.start()
+}
+
+export function stopPlayer() {
+  player.stop()
 }

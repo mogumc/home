@@ -36,6 +36,16 @@ export const defaultConfig = {
     lines: [],
   },
 
+  /** 首屏（进站先看到的整屏名字页） */
+  hero: {
+    /** 留空依次退到 profile.name、site.name */
+    title: '',
+    /** 打字机逐条播放的自我介绍，留空退到 profile.subtitle、site.description */
+    greetings: [],
+    /** 中间那行提示按钮的文案 */
+    hint: 'PRESS START',
+  },
+
   socials: [],
   homeSites: [],
   webSites: [],

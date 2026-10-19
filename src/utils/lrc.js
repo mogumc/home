@@ -5,7 +5,6 @@
  */
 
 const TIME_TAG = /\[(\d{1,3}):(\d{1,2}(?:[.:]\d{1,3})?)\]/g
-const EMPTY_PLACEHOLDER = '♫ ♫ ♫'
 
 function isBlank(text) {
   return !text || text.trim() === ''
@@ -36,6 +35,10 @@ export function parseLrc(raw) {
       stamps.forEach((time) => lines.push({ time, text }))
     })
 
+  /**
+   * 同一时间戳上的多行（原文 + 翻译）都保留：
+   * 接口给的就是上下两行，哪一行照着唱都不该丢。
+   */
   return lines.sort((a, b) => a.time - b.time)
 }
 
@@ -60,13 +63,17 @@ function lineProgress(lines, index, currentTime) {
 }
 
 /**
- * 算出当前该显示哪几行（当前行 + 上下文一行）
+ * 算出当前该显示哪几句歌词。
+ *
  * @param {{time:number,text:string}[]} lines
  * @param {number} currentTime 播放进度（秒）
+ * @param {number} [windowSize=3] 一屏能放几句（由面板高度算出来）
  * @returns {{ text: string, active: boolean, progress: number }[]}
  */
-export function buildLyricView(lines, currentTime) {
+export function buildLyricView(lines, currentTime, windowSize = 3) {
   if (!lines.length) return []
+
+  const size = Math.max(1, Math.floor(windowSize))
 
   const active = new Set()
   for (let i = 0; i < lines.length; i++) {
@@ -75,45 +82,53 @@ export function buildLyricView(lines, currentTime) {
       active.add(i)
     }
   }
-  if (!active.size) return []
 
   // 同一时间戳的多行（对唱、翻译）一起高亮
-  const activeTimes = new Set([...active].map((i) => lines[i].time))
-  lines.forEach((line, i) => {
-    if (activeTimes.has(line.time)) active.add(i)
-  })
-
-  const shown = new Set()
-  active.forEach((i) => {
-    if (!isBlank(lines[i].text)) shown.add(i)
-  })
-
-  // 当前行是空文本（间奏）时，向上下找最近一句有词的
-  if (!shown.size) {
-    const base = Math.min(...active)
-    for (let offset = 0; offset < lines.length; offset++) {
-      const before = base - 1 - offset
-      if (before >= 0 && !isBlank(lines[before].text)) {
-        shown.add(before)
-        break
-      }
-      const after = base + 1 + offset
-      if (after < lines.length && !isBlank(lines[after].text)) {
-        shown.add(after)
-        break
-      }
-    }
+  if (active.size) {
+    const activeTimes = new Set([...active].map((i) => lines[i].time))
+    lines.forEach((line, i) => {
+      if (activeTimes.has(line.time)) active.add(i)
+    })
   }
 
-  const first = Math.min(...active)
-  const last = Math.max(...active)
-  if (first - 1 >= 0 && !isBlank(lines[first - 1].text)) shown.add(first - 1)
-  if (last + 1 < lines.length) shown.add(last + 1)
+  // 还没轮到第一句时，从最前面几句开始显示
+  const anchor = active.size ? Math.min(...active) : 0
 
-  return [...shown]
+  const shown = new Set()
+  const picked = []
+
+  const take = (index) => {
+    if (index < 0 || index >= lines.length) return false
+    if (shown.has(index) || isBlank(lines[index].text)) return false
+    shown.add(index)
+    picked.push(index)
+    return true
+  }
+
+  // 以当前行为中心向两侧交替扩：0, -1, +1, -2, +2 …
+  // 这样当前行始终在中间，上下句数平衡
+  for (let step = 0; picked.length < size && step <= lines.length; step++) {
+    if (step === 0) {
+      take(anchor)
+      continue
+    }
+    take(anchor + step)
+    if (picked.length >= size) break
+    take(anchor - step)
+  }
+
+  // 贴着头尾时一侧没得取了，用另一侧补齐，别让面板空着
+  for (let i = Math.max(anchor, ...picked) + 1; picked.length < size && i < lines.length; i++) {
+    take(i)
+  }
+  for (let i = Math.min(anchor, ...picked) - 1; picked.length < size && i >= 0; i--) {
+    take(i)
+  }
+
+  return picked
     .sort((a, b) => a - b)
     .map((i) => ({
-      text: isBlank(lines[i].text) ? EMPTY_PLACEHOLDER : lines[i].text,
+      text: lines[i].text,
       active: active.has(i),
       progress: active.has(i) ? lineProgress(lines, i, currentTime) : 0,
     }))

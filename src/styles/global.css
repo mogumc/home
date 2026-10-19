@@ -3,6 +3,25 @@
    改主题色、背景图、模糊度，基本只动 :root 里的变量
    ========================================================== */
 
+/* 首屏大字（站点名）用的字体：Chillax Variable，和博客同一套。
+   可变字重 200~700，只取拉丁子集，55KB。 */
+@font-face {
+  font-family: 'Chillax';
+  src: url('../assets/fonts/chillax-variable.woff2') format('woff2');
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 首屏打字机那行用的书写体：Playfair Display 斜体（latin 子集 23KB） */
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('../assets/fonts/playfair-display-italic-500.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+}
+
 :root {
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-bg-hover: rgba(255, 255, 255, 0.12);
@@ -20,6 +39,10 @@
   --site-bg-mask: rgba(0, 0, 0, 0.6);
 
   --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+  /* 首屏大字用的字体：和博客一致的 Chillax；中文没有字形，落到系统无衬线 */
+  --font-display: 'Chillax', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  /* 首屏打字机那行的书写体 */
+  --font-script: 'Playfair Display', 'Songti SC', 'STSong', 'SimSun', Georgia, serif;
   --footer-height: 72px;
   /* 左栏（名片 / 歌词）固定宽度：内容再多再少都不改变框体尺寸 */
   --left-width: 360px;
@@ -36,8 +59,18 @@ html {
   min-height: 100%;
   margin: 0;
   padding: 0;
-  /* 始终预留滚动条位置：切页面时视口宽度不变，背景 cover 不会跟着重算 */
-  scrollbar-gutter: stable;
+  /* 隐藏滚动条但不影响滚动：没有滚动条就没有它的占位，
+     内容始终以完整视口宽度对称居中，切页面时也不会因滚动条出现/消失而抖一下。
+     鼠标滚轮、触控板、键盘、锚点跳转都照常可用，只是不再显示滑块。 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 旧版 Edge / IE */
+}
+
+html::-webkit-scrollbar {
+  /* Chromium / Safari：宽高归零，滚动条彻底不参与布局 */
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 body {
@@ -85,8 +118,16 @@ body::before {
 
 #app {
   flex: 1 0 auto;
+  width: 100%;
+}
+
+/* 内容区：首屏下面那一整屏。滚到这里就算「进了主页」 */
+.page-shell {
+  position: relative;
   display: flex;
   width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   /* 顶部给悬浮导航、底部给固定页脚留位置，比原来塞占位 div 干净 */
   padding: 3.5rem 0 var(--footer-height);
 }
@@ -304,6 +345,14 @@ body::before {
   border-radius: var(--radius) var(--radius) 0 0;
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* 停在首屏时收起：整屏名字页不该挂一条版权信息 */
+.fixed-blur-footer.is-hidden {
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
 }
 
 .fixed-blur-footer a {
@@ -315,47 +364,6 @@ body::before {
 
 .fixed-blur-footer a:hover {
   color: var(--accent);
-}
-
-/* ---------- 页面切换过渡 ---------- */
-/* 新旧两页重叠淡入淡出：旧页脱离文档流快速消失，新页同时淡入，中间不会空一屏 */
-.page-leave-active {
-  position: absolute;
-  left: 0;
-  right: 0;
-  transition: opacity 0.15s ease;
-}
-
-.page-enter-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.page-leave-to {
-  opacity: 0;
-}
-
-/* ---------- 载入动画 ---------- */
-.loading-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111;
-  color: var(--text-strong);
-  font-size: 2rem;
-  font-weight: bold;
-  transition: opacity 0.4s ease;
-}
-
-.loading-screen.is-fading {
-  opacity: 0;
 }
 
 /* ---------- 响应式 ---------- */
@@ -413,12 +421,14 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    /* 无限动画要连次数一起停掉，否则会变成疯狂旋转 */
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  /* 只关掉「一直转 / 一直跳」的装饰性循环，动画的那些最容易让人不适；
+     按钮悬停、首屏与内容之间的滚动画面对导航是有信息量的，保留下来，
+     否则在关了系统动画的机器上整个站会变得毫无反馈。
+     注：Windows 的「设置 → 辅助功能 → 视觉效果 → 动画效果」关掉时，
+     浏览器就会报 reduce。 */
+  .disc,
+  .hero-arrow,
+  .hero-start {
+    animation: none !important;
   }
 }

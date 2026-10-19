@@ -29,6 +29,17 @@
     "lines": []
   },
 
+  "hero": {
+    "greetings": [
+      "Hi! I am MoGuQAQ",
+      "Welcome to my Website!",
+      "Crafting robust systems and elegant interfaces.",
+      "Turning ideas into production-ready applications.",
+      "Building scalable web solutions end-to-end.",
+      "Code, design, deploy — full stack by design."
+    ]
+  },
+
   "socials": [
     { "name": "GitHub", "icon": "github", "url": "https://github.com/mogumc" },
     { "name": "Telegram", "icon": "telegram", "url": "https://t.me/moguqaq" },

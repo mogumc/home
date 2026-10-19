@@ -53,6 +53,26 @@ const images = Array.isArray(merged.background.images)
   ? merged.background.images
   : [merged.background.images]
 
+/** 首屏文案在这里就退好，组件里不用再写一串 || */
+const heroGreetings = (
+  Array.isArray(merged.hero?.greetings) ? merged.hero.greetings : []
+)
+  .map((item) => text(item))
+  .filter(Boolean)
+
+const hero = {
+  title:
+    text(merged.hero?.title) ||
+    text(merged.profile?.name) ||
+    text(merged.site?.name) ||
+    'Home',
+  // 没配就退回原来那句副标题，至少还有一行字在打字
+  greetings: heroGreetings.length
+    ? heroGreetings
+    : [text(merged.profile?.subtitle) || text(merged.site?.description)].filter(Boolean),
+  hint: text(merged.hero?.hint) || 'PRESS START',
+}
+
 export const config = {
   site: {
     name: text(merged.site.name) || 'Home',
@@ -87,6 +107,8 @@ export const config = {
       ? merged.profile.lines.map((line) => text(line)).filter(Boolean)
       : [],
   },
+
+  hero,
 
   socials: normalizeLinks(merged.socials),
   homeSites: normalizeLinks(merged.homeSites),
