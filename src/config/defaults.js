@@ -64,5 +64,12 @@ export const defaultConfig = {
   music: {
     api: '',
     fallback: [],
+    /**
+     * 歌单缓存：revalidate 是「多久之内复用同一份、不重打接口」的秒数。
+     * 音频地址是临时签名，所以缓存只用来省请求和记住列表，播放前仍会换成新地址。
+     */
+    cache: {
+      revalidate: 60,
+    },
   },
 }

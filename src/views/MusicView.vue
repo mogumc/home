@@ -24,6 +24,7 @@ const {
   devInput,
   playlistLoading,
   shortcutsOn,
+  ensurePlaylist,
   setLyricWindow,
   next,
   prev,
@@ -68,6 +69,8 @@ watch(tab, async () => {
 onMounted(async () => {
   // 键盘快捷键（空格、方向键）只在这页接管
   shortcutsOn.value = true
+  // 直接进这一页时不能指望别的组件已经拉过歌单，自己要一次（内部幂等）
+  ensurePlaylist()
   await nextTick()
   watchStage()
 })
@@ -181,7 +184,7 @@ onBeforeUnmount(() => {
         </p>
         <button
           v-for="(song, index) in songs"
-          :key="`${index}-${song.url}`"
+          :key="`${index}-${song.title}`"
           class="track-row"
           type="button"
           :class="{ 'is-current': index === currentIndex }"

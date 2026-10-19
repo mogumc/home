@@ -1,7 +1,9 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { config } from '../config'
 import { clamp, formatTime } from '../utils/format'
-import { buildLyricView, parseLrc } from '../utils/lrc'
+import { buildLyricView } from '../utils/lrc'
+import { loadLyric as loadLyricFile } from '../utils/lyricStore'
+import { fetchPlaylist, normalizeSong, readCache, signatureOf } from '../utils/playlist'
 
 /** 单曲最多重试几次，超过就跳下一首（对齐 music.html 的 3 次） */
 const MAX_SONG_RETRY = 3
@@ -15,16 +17,6 @@ const STALL_TIMEOUT = 8_000
 const HEALTH_INTERVAL = 3_000
 /** 换源防抖：连点切歌只保留最后一首，避免一直 abort 请求把元素搞坏 */
 const SOURCE_DEBOUNCE = 120
-
-function normalizeSong(song = {}) {
-  return {
-    title: song.title || song.name || '',
-    author: song.author || song.artist || '',
-    url: (song.url || '').trim(),
-    lrc: song.lrc || '',
-    cover: song.cover || song.pic || '',
-  }
-}
 
 /**
  * 音乐播放器的状态机：歌单、歌词、进度、音量、键盘控制
@@ -92,6 +84,11 @@ function createPlayer() {
 
   /** 待生效的换源（防抖用） */
   let pendingSource = null
+
+  /** 当前歌单的内容指纹：用来判断接口这次给回来的是不是同一份 */
+  let playlistSig = ''
+  /** 正在跑的那一趟歌单请求 */
+  let playlistPromise = null
 
   const lyricView = computed(() =>
     buildLyricView(lyricLines.value, currentTime.value, lyricWindow.value),
@@ -242,16 +239,14 @@ function createPlayer() {
 
   async function loadLyric(url) {
     const token = ++lyricToken
-    if (!url) return
-    try {
-      const res = await fetch(url)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const raw = await res.text()
-      if (token !== lyricToken) return
-      lyricLines.value = parseLrc(raw)
-    } catch {
-      if (token === lyricToken) lyricLines.value = []
+    if (!url) {
+      lyricLines.value = []
+      return
     }
+    // 歌词文本和解析结果都在 lyricStore 里缓存，切回上一首不用再请求
+    const lines = await loadLyricFile(url)
+    if (token !== lyricToken) return
+    lyricLines.value = lines
   }
 
   function loadIndex(index, autoplay = wantPlay) {
@@ -287,42 +282,108 @@ function createPlayer() {
     scheduleSource(song.url, song.lrc)
   }
 
-  /** 歌单接口：返回空数组表示这次没拿到 */
-  async function fetchPlaylist() {
-    if (!config.music.api) return []
-    try {
-      // 音频地址是临时签名，歌单 JSON 不能吃缓存
-      const res = await fetch(config.music.api, { cache: 'no-store' })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      if (!Array.isArray(data?.data)) return []
-      return data.data.map(normalizeSong).filter((song) => song.url)
-    } catch (err) {
-      console.warn('[player] 歌单接口失败', err)
-      return []
-    }
+  /* ---------- 歌单：缓存先上屏，接口回来只补差异 ---------- */
+
+  /** 缓存里的列表先摆上：进页面就有歌，不用干等接口 */
+  function hydrateFromCache() {
+    if (songs.value.length) return
+    const cached = readCache()
+    if (!cached) return
+
+    songs.value = cached.list
+    playlistSig = cached.sig
+    playlistLoading.value = false
+
+    // 刚写进去的缓存说明地址还没过期，可以直接摆第一首；
+    // 放了一晚上的缓存只用来铺列表，等接口把新地址换回来再建播放元素
+    const ttl = Number.isFinite(config.music.cache?.revalidate)
+      ? config.music.cache.revalidate
+      : 60_000
+    const fresh = cached.savedAt > 0 && Date.now() - cached.savedAt < ttl
+    if (active && fresh && !src.value) loadIndex(0, false)
   }
 
-  async function loadPlaylist() {
-    playlistLoading.value = true
+  /** 指纹一致：内容没变，只把过期的临时地址换新，列表和播放都不动 */
+  function syncVolatile(next) {
+    if (next.length !== songs.value.length) return
+    songs.value.forEach((song, index) => {
+      const fresh = next[index]
+      if (!fresh) return
+      if (song.url !== fresh.url) song.url = fresh.url
+      if (song.lrc !== fresh.lrc) song.lrc = fresh.lrc
+      if (song.cover !== fresh.cover) song.cover = fresh.cover
+    })
+  }
+
+  /**
+   * 应用一份新拉到的歌单。
+   * 内容没变就只换地址；真变了才替换列表，并尽量把正在播的那首「认回来」——
+   * 刷新歌单不该把用户正听的歌打断。
+   */
+  function applyPlaylist(next) {
+    if (!next.length) return
+    const sig = signatureOf(next)
+
+    if (!songs.value.length) {
+      songs.value = next
+      playlistSig = sig
+      if (active && !src.value) loadIndex(0, false)
+      return
+    }
+
+    if (sig === playlistSig) {
+      syncVolatile(next)
+    } else {
+      const playing = songs.value[currentIndex.value]
+      songs.value = next
+      playlistSig = sig
+
+      // 同一首（歌名 + 歌手）还在列表里：跟着挪索引，音频不重启
+      const match = playing
+        ? next.findIndex((song) => song.title === playing.title && song.author === playing.author)
+        : -1
+      if (match >= 0) currentIndex.value = match
+      // 这首被删了：让它放完，索引夹回合法范围
+      else if (src.value) currentIndex.value = Math.min(currentIndex.value, next.length - 1)
+    }
+
+    // 列表铺好了但还没有播放元素（缓存过期时就这样）：拿新地址摆第一首
+    if (active && !src.value) loadIndex(currentIndex.value, false)
+  }
+
+  async function loadPlaylist({ force = false } = {}) {
+    hydrateFromCache()
+    playlistLoading.value = !songs.value.length
+
     try {
-      let list = await fetchPlaylist()
+      let list = await fetchPlaylist({ force })
       if (!list.length) {
+        // 接口挂了：有缓存就接着用缓存，没缓存才退回备用曲目
+        if (songs.value.length) return
         console.warn('[player] 歌单为空，回退到备用曲目')
         list = config.music.fallback.map(normalizeSong).filter((song) => song.url)
       }
-      songs.value = list
       if (!list.length) {
         notice.value = '歌单加载失败'
         wantPlay = false
         return
       }
-      if (!active) return
-      // 进站先摆好第一首，但不自动播：播放要用户自己点
-      loadIndex(0, false)
+      applyPlaylist(list)
     } finally {
       playlistLoading.value = false
     }
+  }
+
+  /**
+   * 幂等地要歌单：播放器启动和音乐页挂载都会调它，
+   * 同一时刻只跑一趟，重复调用拿的是同一个 Promise。
+   */
+  function ensurePlaylist(options) {
+    if (playlistPromise) return playlistPromise
+    playlistPromise = loadPlaylist(options).finally(() => {
+      playlistPromise = null
+    })
+    return playlistPromise
   }
 
   /**
@@ -340,7 +401,8 @@ function createPlayer() {
     rescuing = true
     notice.value = '正在重新加载歌单…'
 
-    const list = await fetchPlaylist()
+    // 缓存里那份地址同样过期了，这里必须强制要一份新的
+    const list = await fetchPlaylist({ force: true })
     rescuing = false
     if (!active) return
 
@@ -349,6 +411,7 @@ function createPlayer() {
       return
     }
     songs.value = list
+    playlistSig = signatureOf(list)
     consecutiveFail = 0
     loadIndex(currentIndex.value, true)
   }
@@ -373,7 +436,7 @@ function createPlayer() {
 
   function next() {
     if (!songs.value.length) {
-      loadPlaylist()
+      ensurePlaylist()
       return
     }
     loadIndex(currentIndex.value + 1, true)
@@ -381,7 +444,7 @@ function createPlayer() {
 
   function prev() {
     if (!songs.value.length) {
-      loadPlaylist()
+      ensurePlaylist()
       return
     }
     loadIndex(currentIndex.value - 1, true)
@@ -599,7 +662,11 @@ function createPlayer() {
     window.addEventListener('keydown', handleKeydown)
     window.addEventListener('keyup', handleKeyup)
     healthTimer = setInterval(healthCheck, HEALTH_INTERVAL)
-    loadPlaylist()
+    // 缓存里有列表就先上屏，没有再去要
+    ensurePlaylist().then(() => {
+      // 音乐页可能比播放器先挂：那时歌单已经铺好了，但元素还没建
+      if (active && !src.value && songs.value.length) loadIndex(currentIndex.value, false)
+    })
   }
 
   function stop() {
@@ -645,6 +712,7 @@ function createPlayer() {
     devInput,
     playlistLoading,
     shortcutsOn,
+    ensurePlaylist,
     setLyricWindow,
     next,
     prev,

@@ -17,7 +17,8 @@ const { title, artist, cover, isPlaying, hasPlayed, percent, currentLyric, toggl
 const visible = computed(
   () =>
     props.shown &&
-    route.path !== '/music' &&
+    // 用 name 判断，/music 和 /music/ 都算音乐页
+    route.name !== 'music' &&
     !!title.value &&
     (hasPlayed.value || isPlaying.value),
 )

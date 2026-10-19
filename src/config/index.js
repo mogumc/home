@@ -142,6 +142,10 @@ export const config = {
             lrc: text(song.lrc),
           }))
       : [],
+    cache: {
+      // 秒 → 毫秒；0 表示每次都校验
+      revalidate: Math.max(0, Number(merged.music.cache?.revalidate) || 0) * 1000,
+    },
   },
 }
 

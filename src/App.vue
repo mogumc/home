@@ -8,6 +8,7 @@ import NavBar from './components/NavBar.vue'
 import PlayerAudio from './components/PlayerAudio.vue'
 import { backgroundUrl } from './config'
 import { coverBusy, coverHeight, measureCover, setCoverElement, toContent } from './composables/useCover'
+import { warmCache } from './utils/playlist'
 
 const route = useRoute()
 const coverRef = ref(null)
@@ -16,13 +17,17 @@ const backgroundReady = ref(false)
 /**
  * 播放器第一次进音乐页才初始化（歌单接口不便宜），
  * 但一旦起来，<audio> 就常驻在这里，切页不断歌。
+ *
+ * 判断用路由 name 而不是 path：GitHub Pages 之类的静态托管会把
+ * /music 301 成 /music/，比 path 字符串会把「直接进来的音乐页」漏掉，
+ * 结果就是歌单永远不拉、<audio> 永远不建。
  */
 const playerStarted = ref(false)
 
 watch(
-  () => route.path,
-  (path) => {
-    if (path === '/music') playerStarted.value = true
+  () => route.name,
+  (name) => {
+    if (name === 'music') playerStarted.value = true
   },
   { immediate: true },
 )
@@ -93,6 +98,9 @@ onMounted(() => {
   window.addEventListener('wheel', onWheel, { passive: false })
   window.addEventListener('keydown', onKeydown)
   readScroll()
+
+  // 首屏闲下来先把歌单索引拉进缓存：之后进音乐页直接有列表，不用等接口
+  warmCache()
 })
 
 onUnmounted(() => {
