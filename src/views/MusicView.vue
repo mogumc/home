@@ -178,29 +178,31 @@ onBeforeUnmount(() => {
         </p>
       </div>
 
-      <div v-else class="track-list">
-        <p v-if="!songs.length" class="stage-empty">
-          {{ playlistLoading ? '歌单加载中…' : '歌单暂无曲目' }}
-        </p>
-        <button
-          v-for="(song, index) in songs"
-          :key="`${index}-${song.title}`"
-          class="track-row"
-          type="button"
-          :class="{ 'is-current': index === currentIndex }"
-          @click="playIndex(index)"
-        >
-          <span class="track-index">
-            <i
-              v-if="index === currentIndex && isPlaying"
-              class="bi bi-bar-chart-fill"
-              aria-hidden="true"
-            ></i>
-            <template v-else>{{ index + 1 }}</template>
-          </span>
-          <span class="track-name">{{ song.title || '未知歌曲' }}</span>
-          <span class="track-artist">{{ song.author }}</span>
-        </button>
+      <div v-else class="panel-body">
+        <div class="track-list">
+          <p v-if="!songs.length" class="stage-empty">
+            {{ playlistLoading ? '歌单加载中…' : '歌单暂无曲目' }}
+          </p>
+          <button
+            v-for="(song, index) in songs"
+            :key="`${index}-${song.title}`"
+            class="track-row"
+            type="button"
+            :class="{ 'is-current': index === currentIndex }"
+            @click="playIndex(index)"
+          >
+            <span class="track-index">
+              <i
+                v-if="index === currentIndex && isPlaying"
+                class="bi bi-bar-chart-fill"
+                aria-hidden="true"
+              ></i>
+              <template v-else>{{ index + 1 }}</template>
+            </span>
+            <span class="track-name">{{ song.title || '未知歌曲' }}</span>
+            <span class="track-artist">{{ song.author }}</span>
+          </button>
+        </div>
       </div>
     </section>
   </div>
@@ -529,11 +531,22 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.35);
 }
 
-.track-list {
-  flex: 1;
+/**
+ * 列表的容器：它不参与面板的高度计算（里面的列表是绝对定位的），
+ * 面板高度完全由左栏播放台决定，列表再填满剩下的空间。
+ * 否则只能给列表写死一个 max-height，窗口一变矮就和左栏对不上，
+ * 底下露出一块空的。
+ */
+.panel-body {
+  position: relative;
+  flex: 1 1 0;
   min-height: 0;
-  max-height: 52vh;
-  margin-top: 0.5rem;
+}
+
+.track-list {
+  position: absolute;
+  inset: 0;
+  padding-top: 0.5rem;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -657,8 +670,10 @@ onBeforeUnmount(() => {
     padding: 1.25rem 0.5rem;
   }
 
-  .track-list {
-    max-height: 46vh;
+  /* 单列时面板高度是 auto，给它一个明确高度，列表才填得满 */
+  .panel-body {
+    flex: 0 0 auto;
+    height: 46vh;
   }
 }
 </style>
